@@ -31,7 +31,7 @@ exports.publish = function *() {
         yield uploadToProdS3(file);
         file.lastModifiedProd = file.lastModified;
         gu.db.setObj('docs2archieml', docs2archieml);
-        this.redirect('/docs2archie/');
+        this.redirect(gu.config.base_url);
     } else {
         this.body = "File ID not found...???"
     }
