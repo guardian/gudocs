@@ -1,0 +1,11 @@
+{
+    "base_url": "/docs",
+    "controllers": "./src/controllers",
+    "routes": {
+        "GET /": "index",
+        "POST /publish": "publish"
+    },
+
+    "s3bucket": "gu-cdn",
+    "secret": "supersecret"
+}

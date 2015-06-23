@@ -1,0 +1,134 @@
+<html>
+<head>
+	<title>Guardian Visuals - docs2archie</title>
+</head>
+<body>
+
+{% block body %}
+
+	<style type="text/css">
+		body {
+			background: #f1f1f1;
+		}
+		.container {
+			max-width: 800px;
+			background: #fff;
+			box-sizing: border-box;
+			padding: 12px 20px;
+			padding-bottom: 24px;
+			margin: auto;
+			margin-top: 24px;
+			font-family: 'Guardian Text Egyptian Web';
+		}
+		table {
+			font-family: 'Guardian Text Sans Web';
+			font-size: 14px;
+		}
+		table thead {
+			font-weight: bold;
+		}
+		table td {
+			padding: 4px 10px;
+		}
+		table td:first-child {
+			padding-left: 0;
+		}
+		table tbody td:nth-child(2), table tbody td:nth-child(3) {
+			color: #767676;
+		}
+		.last-updated {
+			font-family: 'Guardian Text Egyptian Web';
+			font-size: 12px;
+			font-weight: normal;
+			display: inline-block;
+			margin-left: 6px;
+			color: #333;
+		}
+		.share-with {
+			font-size: 12px;
+			margin-top: 24px;
+			color: #333;
+		}
+		.share-with span {
+			color: black;
+		}
+		.current, .old, .docs {
+			  padding: 4px;
+			  border-radius: 4px;
+			  color: black;
+			  text-decoration: none;
+			  font-size: 12px;
+		}
+		.docs {
+			  background-color: rgba(0, 0, 180, 0.3);
+		}
+		.current {
+			  background-color: rgba(0, 136, 0, 0.24);
+		}
+		.old {
+			background-color: rgba(136, 0, 0, 0.24);
+		}
+		.current:hover, .old:hover, .docs:hover {
+			text-decoration: underline;
+		}
+
+	</style>
+	<div class="container">
+
+		<h2>
+			Files
+			<span class="last-updated">
+				last updated:
+				<time datetime="{{ docs2archieml.lastSaved }}" title="{{ docs2archieml.lastSaved }}">
+					{{ docs2archieml.lastSaved | relativeDate }}
+				</time>
+			</span>
+		</h2>
+
+		<table>
+			<thead>
+				<tr>
+					<td>Title</td>
+					<td>Last Modified</td>
+					<td>Last Modifying User</td>
+					<td>Links</td>
+				</tr>
+			</thead>
+
+			<tbody>
+				{% for f in files %}
+				<tr>
+					{% set current = f.lastModifiedProd === f.lastModified %}
+					<td>{{ f.title }}</td>
+					<td title="{{ f.modifiedDate }}">{{ f.lastModified | relativeDate }}</td>
+					<td>{{ f.lastModifyingUserName }}</td>
+					<td>
+						<a class="docs" href="{{ f.urlDoc }}">docs</a> /
+						<a class="{%if f.lastModifiedTest === f.lastModified%}current{%else%}old{%endif%}"
+							href="{{ f.urlTest }}">test</a>
+						{% if f.urlProd %}
+							/ <a class="{%if f.lastModifiedProd === f.lastModified%}current{%else%}old{%endif%}"
+							     href="{{ f.urlProd }}">
+								prod</a>
+						{% endif %}
+					</td>
+					<td>
+						{% if f.lastModifiedProd !== f.lastModified %}
+							<form method="POST" action='publish'>
+								<input type="hidden" name="id" value="{{ f.id }}">
+								<button class="btn btn--blue">publish</button>
+							</form>
+						{% else %}
+							<button class="btn btn--blue" disabled="disabled">up-to-date</button>
+						{% endif %}
+					</td>
+			  	{% endfor %}
+			</tbody>
+		</table>
+
+		<div class="share-with">To add a document to this list share it with <span>{{config.scripts.docs2archieml.auth_email}}</span></div>
+
+	</div>
+{% endblock %}
+</body>
+</html>
