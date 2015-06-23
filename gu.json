@@ -6,6 +6,13 @@
         "POST /publish": "publish"
     },
 
-    "s3bucket": "gu-cdn",
-    "secret": "supersecret"
+    "secret": "supersecret",
+    "aws_profile": "visuals",
+    "s3bucket": "gdn-cdn",
+    "s3domain": "http://interactive.guim.co.uk",
+    "auth_email": "",
+    "auth_key": "",
+    "upload_to_s3": false,
+    "testFolder": "docsdata-test",
+    "prodFolder": "docsdata"
 }
