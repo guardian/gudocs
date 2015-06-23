@@ -5,7 +5,7 @@ const denodeify = require('denodeify')
 const archieml = require('archieml')
 const _ = require('lodash')
 const path = require('path')
-const gu = require('koa-gu').init(path.join(__dirname, '..'))
+const gu = require('koa-gu').init(false)
 const co = require('co')
 
 class Docs2archieml {

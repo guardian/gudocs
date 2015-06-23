@@ -11,7 +11,7 @@ module.exports = www;
 
 function www(opts) {
     var app = koa();
-    var gu = require('koa-gu').init(path.resolve(__dirname, '..'));
+    var gu = require('koa-gu').init();
     app.keys = [gu.config.secret];
 
     // logging
