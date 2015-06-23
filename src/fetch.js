@@ -4,14 +4,9 @@ const rp = require('request-promise')
 const denodeify = require('denodeify')
 const archieml = require('archieml')
 const _ = require('lodash')
-const db = require(':db')
-const config = require(':config').scripts.docs2archieml
-const s3 = require(':s3')
-
-exports.run = function*() {
-    let docs2archieml = new Docs2archieml(config)
-    yield docs2archieml.run();
-}
+const path = require('path')
+const gu = require('koa-gu').init(path.join(__dirname, '..'))
+const co = require('co')
 
 class Docs2archieml {
     constructor(opts) {
@@ -19,8 +14,8 @@ class Docs2archieml {
         this.dbKey = 'docs2archieml';
         this.jwtClient = new google.auth.JWT(
             this.opts.auth_email,
-            this.opts.auth_key,
             null,
+            this.opts.auth_key,
             ['https://www.googleapis.com/auth/drive']
         );
     }
@@ -51,23 +46,24 @@ class Docs2archieml {
             ContentType: 'application/json',
             CacheControl: 'max-age=5'
         }
-        return config.no_upload ?
-          new Promise(resolve => { console.log(`test upload ${params.Key}`); resolve(); }) :
-          s3.putObject(params);
+        return gu.config.upload ?
+            gu.s3.putObject(params) :
+            new Promise(resolve => { console.log(`test upload ${params.Key}`); resolve(); });
     }
     *loadDb() {
-      this.db = (yield db.getObj(this.dbKey)) || { files: {} };
+      this.db = (yield gu.db.getObj(this.dbKey)) || { files: {} };
       console.log(`${Object.keys(this.db.files).length} entries in db`)
     }
     *saveFileObj(fileObj) {
       this.db.lastSaved = new Date();
       this.db.files[fileObj.id] = fileObj;
-      yield db.setObj(this.dbKey, this.db);
+      yield gu.db.setObj(this.dbKey, this.db);
     }
 
     *run() {
         this.tokens = yield this.jwtClient.authorize.bind(this.jwtClient);
         yield this.loadDb();
+
 
         var fileMetas = yield this.fetchFilesMeta();
         for (let fileMeta of fileMetas) {
@@ -105,7 +101,7 @@ class Docs2archieml {
     }
 
     *fetchFilesMeta() {
-        let fileList = yield denodeify(drive.files.list)({ auth: this.jwtClient });
+        var fileList = yield denodeify(drive.files.list)({ auth: this.jwtClient });
         if (fileList.kind !== 'drive#fileList')
             throw new Error('Unexpected response ( fileList.kind !== \'drive#fileList\' )');
         console.log(fileList.items.filter(f => f.mimeType === 'application/vnd.google-apps.spreadsheet'));
@@ -113,3 +109,11 @@ class Docs2archieml {
           .filter(file => file.mimeType === 'application/vnd.google-apps.document')
     }
 }
+
+co(function*() {
+    var docs2archieml = new Docs2archieml(gu.config)
+    yield docs2archieml.run();
+}).catch(err => {
+    gu.db.quit();
+    console.log(err.stack)
+}).then(err => gu.db.quit())
