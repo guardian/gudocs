@@ -104,7 +104,6 @@ class Docs2archieml {
         var fileList = yield denodeify(drive.files.list)({ auth: this.jwtClient });
         if (fileList.kind !== 'drive#fileList')
             throw new Error('Unexpected response ( fileList.kind !== \'drive#fileList\' )');
-        console.log(fileList.items.filter(f => f.mimeType === 'application/vnd.google-apps.spreadsheet'));
         return fileList.items
           .filter(file => file.mimeType === 'application/vnd.google-apps.document')
     }
