@@ -1,17 +1,20 @@
-var responseTime = require('koa-response-time');
-var compress = require('koa-compress');
-var logger = require('koa-logger');
-var koa = require('koa');
-var koaBody = require('koa-body');
-var koaSession = require('koa-session');
-var path = require('path');
-var env = process.env.NODE_ENV || 'development';
+import gu from 'koa-gu'
+import responseTime from 'koa-response-time'
+import compress from 'koa-compress'
+import logger from 'koa-logger'
+import koa from 'koa'
+import koaBody from 'koa-body'
+import koaSession from 'koa-session'
+import path from 'path'
+
+var env = process.env.NODE_ENV || 'development'
 
 module.exports = www;
 
 function www(opts) {
+    gu.init();
     var app = koa();
-    var gu = require('koa-gu').init();
+
     app.keys = [gu.config.secret];
 
     // logging

@@ -98,22 +98,21 @@
 			<tbody>
 				{% for f in files %}
 				<tr>
-					{% set current = f.lastModifiedProd === f.lastModified %}
 					<td>{{ f.title }}</td>
-					<td title="{{ f.modifiedDate }}">{{ f.lastModified | relativeDate }}</td>
-					<td>{{ f.lastModifyingUserName }}</td>
+					<td title="{{ f.modifiedDate }}">{{ f.metaData.modifiedDate | relativeDate }}</td>
+					<td>{{ f.metaData.lastModifyingUserName }}</td>
 					<td>
-						<a class="docs" href="{{ f.urlDoc }}">docs</a> /
-						<a class="{%if f.lastModifiedTest === f.lastModified%}current{%else%}old{%endif%}"
+						<a class="docs" href="{{ f.urlDocs }}">docs</a> /
+						<a class="{%if f.isTestCurrent() %}current{%else%}old{%endif%}"
 							href="{{ f.urlTest }}">test</a>
 						{% if f.urlProd %}
-							/ <a class="{%if f.lastModifiedProd === f.lastModified%}current{%else%}old{%endif%}"
+							/ <a class="{%if f.isProdCurrent() %}current{%else%}old{%endif%}"
 							     href="{{ f.urlProd }}">
 								prod</a>
 						{% endif %}
 					</td>
 					<td>
-						{% if f.lastModifiedProd !== f.lastModified %}
+						{% if !f.isProdCurrent() %}
 							<form method="POST" action='publish'>
 								<input type="hidden" name="id" value="{{ f.id }}">
 								<button class="btn btn--blue">publish</button>

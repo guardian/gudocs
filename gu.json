@@ -1,5 +1,5 @@
 {
-    "base_url": "/docs",
+    "base_url": "/",
     "controllers": "./src/controllers",
     "routes": {
         "GET /": "index",
@@ -12,7 +12,7 @@
     "s3domain": "http://interactive.guim.co.uk",
     "auth_email": "",
     "auth_key": "",
-    "upload_to_s3": false,
+    "upload_to_s3": true,
     "testFolder": "docsdata-test",
     "prodFolder": "docsdata"
 }
