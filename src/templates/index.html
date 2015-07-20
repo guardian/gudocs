@@ -113,7 +113,7 @@
 					</td>
 					<td>
 						{% if !f.isProdCurrent() %}
-							<form method="POST" action='publish'>
+							<form method="POST" action='{{config.base_url}}/publish'>
 								<input type="hidden" name="id" value="{{ f.id }}">
 								<button class="btn btn--blue">publish</button>
 							</form>

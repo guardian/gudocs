@@ -1,5 +1,5 @@
 {
-    "base_url": "/",
+    "base_url": "/docs",
     "controllers": "./src/controllers",
     "routes": {
         "GET /": "index",
