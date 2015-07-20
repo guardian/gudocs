@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "www": "node --harmony ./src/cli.js",
+    "www": "./node_modules/.bin/babel-node --harmony ./src/cli.js",
     "dev": "./node_modules/.bin/nodemon --exec babel-node --harmony ./src/cli.js",
-    "fetch": "babel-node --harmony ./src/fetch.js"
+    "fetch": "./node_modules/.bin/babel-node --harmony ./src/fetch.js"
   },
   "author": "",
   "license": "ISC",
