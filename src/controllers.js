@@ -22,7 +22,7 @@ exports.publish = function *() {
         yield docsFile.uploadToS3(true);
         docs2archieml.files[docId] = docsFile.serialize();
         gu.db.setObj(gu.config.dbkey, docs2archieml);
-        this.redirect(gu.config.base_url);
+        this.redirect(this.headers.referer);
     } else {
         this.body = "File ID not found...???"
     }
