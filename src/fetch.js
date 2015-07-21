@@ -7,15 +7,16 @@ import co from 'co'
 import fs from 'fs'
 import {DocsFile} from './docsfile'
 var drive = google.drive('v2')
+var key = require('../key.json');
 
 class Docs2archieml {
 
     constructor(opts) {
         this.opts = opts;
         this.jwtClient = new google.auth.JWT(
-            this.opts.auth_email,
+            key.client_email,
             null,
-            this.opts.auth_key,
+            key.private_key,
             ['https://www.googleapis.com/auth/drive']
         );
     }
