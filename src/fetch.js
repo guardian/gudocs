@@ -12,7 +12,6 @@ class Docs2archieml {
 
     constructor(opts) {
         this.opts = opts;
-        this.dbKey = 'docs2archieml';
         this.jwtClient = new google.auth.JWT(
             this.opts.auth_email,
             null,
@@ -22,14 +21,14 @@ class Docs2archieml {
     }
 
     *loadDb() {
-      this.db = (yield gu.db.getObj(this.dbKey)) || { files: {} };
+      this.db = (yield gu.db.getObj(gu.config.dbkey)) || { files: {} };
       console.log(`${Object.keys(this.db.files).length} entries in db`)
     }
 
     *saveFileObj(fileObj) {
       this.db.lastSaved = new Date();
       this.db.files[fileObj.id] = fileObj.serialize();
-      yield gu.db.setObj(this.dbKey, this.db);
+      yield gu.db.setObj(gu.config.dbkey, this.db);
     }
 
     *fetchFilesMeta() {

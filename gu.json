@@ -9,6 +9,7 @@
     "secret": "supersecret",
     "aws_profile": "visuals",
     "s3bucket": "gdn-cdn",
+    "dbkey": "gudocs",
     "s3domain": "http://interactive.guim.co.uk",
     "auth_email": "",
     "auth_key": "",
