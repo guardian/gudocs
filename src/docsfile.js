@@ -1,8 +1,57 @@
 import gu from 'koa-gu'
 import rp from 'request-promise'
 import archieml from 'archieml'
+import denodeify from 'denodeify'
+import google from 'googleapis'
+import { Converter } from 'csvtojson'
+var drive = google.drive('v2')
 
-export class DocsFile {
+export class FileManager {
+    constructor({jwtClient}) {
+        this.jwtClient = jwtClient
+    }
+
+    *getDb() {
+        var db = (yield gu.db.getObj(gu.config.dbkey)) || { files: {} };
+        console.log(`${Object.keys(db.files).length} entries in db`)
+        return db;
+    }
+
+    *saveDb(db) {
+        db.lastSaved = new Date();
+        return gu.db.setObj(gu.config.dbkey, db);
+    }
+
+    *getTokens() {
+        return (yield this.jwtClient.authorize.bind(this.jwtClient));
+    }
+
+    *fetchFilesMeta() {
+        var validTypes = Object.keys(GuFile.types);
+        var fileList = yield denodeify(drive.files.list)({ auth: this.jwtClient });
+        if (fileList.kind !== 'drive#fileList')
+            throw new Error('Unexpected response ( fileList.kind !== \'drive#fileList\' )');
+        return fileList.items
+          .filter(file => validTypes.indexOf(file.mimeType) !== -1 )
+    }
+
+    *update() {
+        var db = yield this.getDb();
+        var fileMetas = yield this.fetchFilesMeta();
+        var tokens = yield this.getTokens();
+        for (let fileMeta of fileMetas) {
+            let fileJSON = db.files[fileMeta.id] || {metaData: fileMeta};
+            let guFile = GuFile.deserialize(fileJSON);
+            if (guFile) {
+                yield guFile.update(fileMeta, tokens);
+                db.files[guFile.id] = guFile.serialize();
+                yield this.saveDb(db);
+            }
+        }
+    }
+}
+
+export class GuFile {
     constructor({metaData, lastUploadTest = null, lastUploadProd = null, rawBody = ''}) {
         this.metaData = metaData;
         this.lastUploadTest = lastUploadTest
@@ -23,6 +72,49 @@ export class DocsFile {
 
     isTestCurrent() { return this.lastUploadTest === this.metaData.modifiedDate }
     isProdCurrent() { return this.lastUploadProd === this.metaData.modifiedDate }
+
+    static get types() {
+        return {
+            'application/vnd.google-apps.spreadsheet': SheetsFile,
+            'application/vnd.google-apps.document': DocsFile
+        };
+    }
+
+    static deserialize(json) {
+        var FileClass = this.types[json.metaData.mimeType];
+        if (!FileClass) console.log(`mimeType ${json.metaData.mimeType} not recognized`);
+        else return new FileClass(json);
+    }
+
+    serialize() {
+        return {
+            metaData: this.metaData,
+            rawBody: this.rawBody,
+            lastUploadTest: this.lastUploadTest,
+            lastUploadProd: this.lastUploadProd
+        };
+    }
+
+    uploadToS3(prod=false) {
+        var params = {
+            Bucket: gu.config.s3bucket,
+            Key: prod ? this.pathProd : this.pathTest,
+            Body: this.stringBody,
+            ACL: 'public-read',
+            ContentType: 'application/json',
+            CacheControl: prod ? 'max-age=30' : 'max-age=5'
+        }
+        var promise = gu.s3.putObject(params);
+        promise.then(_ =>
+            this[prod ? 'lastUploadProd' : 'lastUploadTest'] = this.metaData.modifiedDate);
+        return promise;
+    }
+}
+export class DocsFile extends GuFile {
+    constructor() {
+        super(arguments[0])
+        this.icon = 'doc';
+    }
 
     get archieJSON() { return archieml.load(this.rawBody) }
 
@@ -47,27 +139,58 @@ export class DocsFile {
       });
     }
 
-    uploadToS3(prod=false) {
-        var params = {
-            Bucket: gu.config.s3bucket,
-            Key: prod ? this.pathProd : this.pathTest,
-            Body: JSON.stringify(this.archieJSON),
-            ACL: 'public-read',
-            ContentType: 'application/json',
-            CacheControl: prod ? 'max-age=30' : 'max-age=5'
-        }
-        var promise = gu.s3.putObject(params);
-        promise.then(_ =>
-            this[prod ? 'lastUploadProd' : 'lastUploadTest'] = this.metaData.modifiedDate);
-        return promise;
+    get stringBody() { return JSON.stringify(this.archieJSON); }
+}
+
+export class SheetsFile extends GuFile {
+    constructor() {
+        super(arguments[0])
+        this.icon = 'sheet';
     }
 
-    serialize() {
-        return {
-            metaData: this.metaData,
-            rawBody: this.rawBody,
-            lastUploadTest: this.lastUploadTest,
-            lastUploadProd: this.lastUploadProd
-        };
+
+    *getSheetCsvUrls(tokens) {
+        var embedHTML = yield rp({
+            uri: this.metaData.embedLink,
+            headers: {
+                'Authorization': tokens.token_type + ' ' + tokens.access_token
+            }
+        });
+        var regex = /gid=(\d+)/g;
+        var match, gids = [];
+        while (match = regex.exec(embedHTML)) gids.push(match[1]);
+        var baseUrl = this.metaData.exportLinks['text/csv'];
+        return gids.map(gid => `${baseUrl}&gid=${gid}`);
     }
+
+    *getSheetAsJson(csvUrl, tokens) {
+        var csv = yield rp({
+            uri: csvUrl,
+            headers: {
+                'Authorization': tokens.token_type + ' ' + tokens.access_token
+            }
+        });
+        var converter = new Converter({constructResult:true});
+        var csvToJson = denodeify(converter.fromString.bind(converter));
+        var json = yield csvToJson(csv);
+        return json
+    }
+
+    get stringBody() { return JSON.stringify(this.rawBody); }
+
+    *update(newMetaData, tokens) {
+        var needsUpdating = this.rawBody === '' ||
+                            this.metaData.modifiedDate !== newMetaData.modifiedDate;
+        console.log(needsUpdating ? '' : 'not', `updating ${this.title}`)
+        this.metaData = newMetaData;
+        if (needsUpdating) {
+            var sheetUrls = yield this.getSheetCsvUrls(tokens);
+            var sheetJsons = yield sheetUrls.map(url => this.getSheetAsJson(url, tokens))
+            this.rawBody = sheetJsons;
+            return this.uploadToS3(false);
+        }
+        return new Promise(resolve => resolve())
+    }
+
+
 }
