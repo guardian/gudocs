@@ -24,6 +24,9 @@
 		table thead {
 			font-weight: bold;
 		}
+		table thead th:first-child {
+			text-align: left;
+		}
 		table td {
 			padding: 4px 10px;
 		}
@@ -33,6 +36,17 @@
 		table tbody td:nth-child(2), table tbody td:nth-child(3) {
 			color: #767676;
 		}
+		table tbody td:nth-child(4) {
+			text-align: center;
+		}
+
+		{% if !config.requireDomainPermissions %}
+			table tbody td:nth-child(4),
+			table thead th:nth-child(4) {
+				display: none;
+			}
+		{% endif %}
+
 		.last-updated {
 			font-family: 'Guardian Text Egyptian Web';
 			font-size: 12px;
@@ -84,6 +98,15 @@
 			background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAA3XAAAN1wFCKJt4AAAAB3RJTUUH3wcVDwYokug3pgAAAElJREFUKM9jdG79fPw/A6MFA0ng/3Em0jUxMDAwMFoyMZAJyNbIgszZW8WNV7Fz21fsGpElhpiN+Awi20b6xyMlGv8fJ13b/2MAVPkY3/SSjKQAAAAASUVORK5CYII=) no-repeat center;
 		}
 
+		.permission {
+			border-radius: 2px;
+			padding: 4px;
+		}
+
+		.permission--writer { background: rgba(0, 136, 0, 0.24); }
+		.permission--reader { background: rgba(197, 105, 0, 0.24) }
+		.permission--none, .permission--unknown { background: rgba(136, 0, 0, 0.24) }
+
 	</style>
 	<div class="container">
 
@@ -100,10 +123,11 @@
 		<table>
 			<thead>
 				<tr>
-					<td>Title</td>
-					<td>Last Modified</td>
-					<td>Last Modifying User</td>
-					<td>Links</td>
+					<th>Title</th>
+					<th>Last Modified</th>
+					<th>By</th>
+					<th>@{{config.requireDomainPermissions}}</th>
+					<th>Links</th>
 				</tr>
 			</thead>
 
@@ -113,6 +137,7 @@
 					<td><i class="{{ f.icon }}-icon"></i>{{ f.title }}</td>
 					<td title="{{ f.modifiedDate }}">{{ f.metaData.modifiedDate | relativeDate }}</td>
 					<td>{{ f.metaData.lastModifyingUserName }}</td>
+					<td><span class="permission permission--{{ f.domainPermissions }}">{{ f.domainPermissions }}</span></td>
 					<td>
 						<a class="docs" href="{{ f.urlDocs }}">docs</a> /
 						<a class="{%if f.isTestCurrent() %}current{%else%}old{%endif%}"

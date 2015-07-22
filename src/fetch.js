@@ -1,12 +1,6 @@
-import google from 'googleapis'
-import denodeify from 'denodeify'
-import _ from 'lodash'
-import path from 'path'
 import gu from 'koa-gu'
 import co from 'co'
-import fs from 'fs'
 import { FileManager } from './docsfile'
-var key = require('../key.json');
 
 class Gudocs {
     constructor(opts) {
@@ -14,13 +8,7 @@ class Gudocs {
     }
 
     *run() {
-        var jwtClient = new google.auth.JWT(
-            key.client_email,
-            null,
-            key.private_key,
-            ['https://www.googleapis.com/auth/drive']
-        );
-        var fileManager = new FileManager({jwtClient});
+        var fileManager = new FileManager();
         yield fileManager.update();
     }
 }

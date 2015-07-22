@@ -13,6 +13,7 @@
     "s3domain": "http://interactive.guim.co.uk",
     "auth_email": "",
     "auth_key": "",
+    "requireDomainPermissions": "guardian.co.uk",
     "upload_to_s3": true,
     "testFolder": "docsdata-test",
     "prodFolder": "docsdata"

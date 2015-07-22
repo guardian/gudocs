@@ -4,11 +4,12 @@ import archieml from 'archieml'
 import denodeify from 'denodeify'
 import google from 'googleapis'
 import { Converter } from 'csvtojson'
+import { jwtClient } from './auth.js'
 var drive = google.drive('v2')
+var key = require('../key.json');
 
 export class FileManager {
-    constructor({jwtClient}) {
-        this.jwtClient = jwtClient
+    constructor() {
     }
 
     *getDb() {
@@ -23,12 +24,12 @@ export class FileManager {
     }
 
     *getTokens() {
-        return (yield this.jwtClient.authorize.bind(this.jwtClient));
+        return (yield jwtClient.authorize.bind(jwtClient));
     }
 
     *fetchFilesMeta() {
         var validTypes = Object.keys(GuFile.types);
-        var fileList = yield denodeify(drive.files.list)({ auth: this.jwtClient });
+        var fileList = yield denodeify(drive.files.list)({ auth: jwtClient });
         if (fileList.kind !== 'drive#fileList')
             throw new Error('Unexpected response ( fileList.kind !== \'drive#fileList\' )');
         return fileList.items
@@ -52,10 +53,11 @@ export class FileManager {
 }
 
 export class GuFile {
-    constructor({metaData, lastUploadTest = null, lastUploadProd = null, rawBody = ''}) {
+    constructor({metaData, lastUploadTest = null, lastUploadProd = null, rawBody = '', domainPermissions = 'unknown'}) {
         this.metaData = metaData;
         this.lastUploadTest = lastUploadTest
         this.lastUploadProd = lastUploadProd
+        this.domainPermissions = domainPermissions
         this.rawBody = rawBody;
     }
 
@@ -91,8 +93,21 @@ export class GuFile {
             metaData: this.metaData,
             rawBody: this.rawBody,
             lastUploadTest: this.lastUploadTest,
-            lastUploadProd: this.lastUploadProd
+            lastUploadProd: this.lastUploadProd,
+            domainPermissions: this.domainPermissions
         };
+    }
+
+    *fetchDomainPermissions() {
+        if (gu.config.requireDomainPermissions) {
+            var listPermissions = denodeify(drive.permissions.list);
+            var perms = yield listPermissions({auth: jwtClient, fileId: this.id});
+            var domainPermission = perms.items.find(i => i.name === gu.config.requireDomainPermissions)
+            if (domainPermission) return domainPermission.role;
+            else if(perms.items.find(i => i.emailAddress === key.client_email)) {
+                return 'none';
+            } else return 'unknown';
+        } else return 'disabled';
     }
 
     uploadToS3(prod=false) {
@@ -125,6 +140,7 @@ export class DocsFile extends GuFile {
         this.metaData = newMetaData;
         if (needsUpdating) {
             this.rawBody = yield this.fetchFileBody(tokens);
+            this.domainPermissions = yield this.fetchDomainPermissions();
             return this.uploadToS3(false);
         }
         return new Promise(resolve => resolve())
@@ -147,7 +163,6 @@ export class SheetsFile extends GuFile {
         super(arguments[0])
         this.icon = 'sheet';
     }
-
 
     *getSheetCsvUrls(tokens) {
         var embedHTML = yield rp({
@@ -187,10 +202,9 @@ export class SheetsFile extends GuFile {
             var sheetUrls = yield this.getSheetCsvUrls(tokens);
             var sheetJsons = yield sheetUrls.map(url => this.getSheetAsJson(url, tokens))
             this.rawBody = sheetJsons;
+            this.domainPermissions = yield this.fetchDomainPermissions();
             return this.uploadToS3(false);
         }
         return new Promise(resolve => resolve())
     }
-
-
 }
