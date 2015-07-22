@@ -126,10 +126,6 @@ export class GuFile {
     }
 }
 export class DocsFile extends GuFile {
-    constructor() {
-        super(arguments[0])
-        this.icon = 'doc';
-    }
 
     get archieJSON() { return archieml.load(this.rawBody) }
 
@@ -159,10 +155,6 @@ export class DocsFile extends GuFile {
 }
 
 export class SheetsFile extends GuFile {
-    constructor() {
-        super(arguments[0])
-        this.icon = 'sheet';
-    }
 
     *getSheetCsvUrls(tokens) {
         var embedHTML = yield rp({
