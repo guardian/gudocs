@@ -13,8 +13,8 @@ Setup
 Running server
 --------------
 
-Development (auto-reload) - `npm run dev`
-Production - `npm run www`
+- Development (auto-reload) - `npm run dev`
+- Production - `npm run www`
 
 Fetching/updating docs
 ----------------------
