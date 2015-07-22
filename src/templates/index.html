@@ -20,6 +20,7 @@
 		table {
 			font-family: 'Guardian Text Sans Web';
 			font-size: 14px;
+			border-collapse: collapse;
 		}
 		table thead {
 			font-weight: bold;
@@ -28,16 +29,20 @@
 			text-align: left;
 		}
 		table td {
-			padding: 4px 10px;
+			padding: 10px;
 		}
-		table td:first-child {
-			padding-left: 0;
+		table td:first-child,
+		table th:first-child {
+			padding-left: 4px;
 		}
 		table tbody td:nth-child(2), table tbody td:nth-child(3) {
 			color: #767676;
 		}
 		table tbody td:nth-child(4) {
 			text-align: center;
+		}
+		table tbody td form {
+			margin: 0;
 		}
 
 		{% if !config.requireDomainPermissions %}
@@ -98,11 +103,14 @@
 			background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAA3XAAAN1wFCKJt4AAAAB3RJTUUH3wcVDwYokug3pgAAAElJREFUKM9jdG79fPw/A6MFA0ng/3Em0jUxMDAwMFoyMZAJyNbIgszZW8WNV7Fz21fsGpElhpiN+Awi20b6xyMlGv8fJ13b/2MAVPkY3/SSjKQAAAAASUVORK5CYII=) no-repeat center;
 		}
 
+		tr.domainpermissions--none {
+			background: rgb(255, 200, 200);
+		}
+
 		.permission {
 			border-radius: 2px;
 			padding: 4px;
 		}
-
 		.permission--writer { background: rgba(0, 136, 0, 0.24); }
 		.permission--reader { background: rgba(197, 105, 0, 0.24) }
 		.permission--none, .permission--unknown { background: rgba(136, 0, 0, 0.24) }
@@ -133,7 +141,7 @@
 
 			<tbody>
 				{% for f in files %}
-				<tr>
+				<tr class="domainpermissions--{{f.domainPermissions}}">
 					<td><i class="{{ f.icon }}-icon"></i>{{ f.title }}</td>
 					<td title="{{ f.modifiedDate }}">{{ f.metaData.modifiedDate | relativeDate }}</td>
 					<td>{{ f.metaData.lastModifyingUserName }}</td>
