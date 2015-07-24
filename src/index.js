@@ -13,7 +13,7 @@ module.exports = www;
 
 function www(opts) {
     gu.init();
-    var app = koa();
+    var app = koa(); 
 
     app.keys = [gu.config.secret];
 
