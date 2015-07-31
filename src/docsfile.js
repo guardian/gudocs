@@ -213,7 +213,6 @@ export class SheetsFile extends GuFile {
             this.rawBody = {};
             this.rawBody['sheets'] = _.zipObject(this.sheetNames, sheetJsons)
 
-            // this.rawBody = sheetJsons;
             this.domainPermissions = yield this.fetchDomainPermissions();
             return this.uploadToS3(false);
         }
