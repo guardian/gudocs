@@ -175,6 +175,7 @@ export class SheetsFile extends GuFile {
         while (nameMatch = nameRegex.exec(embedHTML)) sheetNames.push(nameMatch[2]);
 
         this.gidNames = _.object(gids, sheetNames);
+        this.sheetNames = sheetNames;
 
         return gids;
     }
@@ -183,33 +184,36 @@ export class SheetsFile extends GuFile {
         var baseUrl = this.metaData.exportLinks['text/csv'],
             json,
             csv = yield rp({
-            uri: `${baseUrl}&gid=${gid}`,
-            headers: {
-                'Authorization': tokens.token_type + ' ' + tokens.access_token
-            }
-        });
+                uri: `${baseUrl}&gid=${gid}`,
+                headers: {
+                    'Authorization': tokens.token_type + ' ' + tokens.access_token
+                }
+            });
         var converter = new Converter({constructResult:true});
         var csvToJson = denodeify(converter.fromString.bind(converter));
         
         json = (this.gidNames[gid] !== "tableDataSheet") ? Baby.parse(csv, { header: true }) : Baby.parse(csv, { header: false });
 
-        var obj = {};
-        obj[this.gidNames[gid]] = json.data;
-        return obj;
+        return json.data;
     }
 
     get stringBody() { return JSON.stringify(this.rawBody); }
 
     *update(newMetaData, tokens) {
-        var needsUpdating = this.rawBody === '' ||
+        var needsUpdating = true || this.rawBody === '' ||
                             this.metaData.modifiedDate !== newMetaData.modifiedDate;
         console.log(needsUpdating ? '' : 'not', `updating ${this.title}`)
         this.metaData = newMetaData;
         if (needsUpdating) {
+            let self = this;
             var sheetUrls = yield this.getSheetCsvGid(tokens);
+
             var sheetJsons = yield sheetUrls.map(url => this.getSheetAsJson(url, tokens));
-            console.log(sheetJsons);
-            this.rawBody = sheetJsons;
+
+            this.rawBody = {};
+            this.rawBody['sheets'] = _.zipObject(this.sheetNames, sheetJsons)
+
+            // this.rawBody = sheetJsons;
             this.domainPermissions = yield this.fetchDomainPermissions();
             return this.uploadToS3(false);
         }
