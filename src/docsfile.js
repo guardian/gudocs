@@ -5,6 +5,9 @@ import denodeify from 'denodeify'
 import google from 'googleapis'
 import { Converter } from 'csvtojson'
 import { jwtClient } from './auth.js'
+import { _ } from 'lodash'
+import Baby from 'babyparse'
+
 var drive = google.drive('v2')
 var key = require('../key.json');
 
@@ -156,31 +159,41 @@ export class DocsFile extends GuFile {
 
 export class SheetsFile extends GuFile {
 
-    *getSheetCsvUrls(tokens) {
+    *getSheetCsvGid(tokens) {
         var embedHTML = yield rp({
             uri: this.metaData.embedLink,
             headers: {
                 'Authorization': tokens.token_type + ' ' + tokens.access_token
             }
         });
-        var regex = /gid=(\d+)/g;
-        var match, gids = [];
-        while (match = regex.exec(embedHTML)) gids.push(match[1]);
-        var baseUrl = this.metaData.exportLinks['text/csv'];
-        return gids.map(gid => `${baseUrl}&gid=${gid}`);
+        var gidRegex = /gid=(\d+)/g,
+            nameRegex = /(name: ")([^"]*)/g;
+
+        var gidMatch, gids = [], nameMatch, sheetNames = [];
+        while (gidMatch = gidRegex.exec(embedHTML)) gids.push(gidMatch[1]);
+        while (nameMatch = nameRegex.exec(embedHTML)) sheetNames.push(nameMatch[2]);
+
+        this.gidNames = _.object(gids, sheetNames);
+        this.sheetNames = sheetNames;
+
+        return gids;
     }
 
-    *getSheetAsJson(csvUrl, tokens) {
-        var csv = yield rp({
-            uri: csvUrl,
-            headers: {
-                'Authorization': tokens.token_type + ' ' + tokens.access_token
-            }
-        });
+    *getSheetAsJson(gid, tokens) {
+        var baseUrl = this.metaData.exportLinks['text/csv'],
+            json,
+            csv = yield rp({
+                uri: `${baseUrl}&gid=${gid}`,
+                headers: {
+                    'Authorization': tokens.token_type + ' ' + tokens.access_token
+                }
+            });
         var converter = new Converter({constructResult:true});
         var csvToJson = denodeify(converter.fromString.bind(converter));
-        var json = yield csvToJson(csv);
-        return json
+        
+        json = Baby.parse(csv, { header: this.gidNames[gid] !== "tableDataSheet" });
+
+        return json.data;
     }
 
     get stringBody() { return JSON.stringify(this.rawBody); }
@@ -191,9 +204,13 @@ export class SheetsFile extends GuFile {
         console.log(needsUpdating ? '' : 'not', `updating ${this.title}`)
         this.metaData = newMetaData;
         if (needsUpdating) {
-            var sheetUrls = yield this.getSheetCsvUrls(tokens);
-            var sheetJsons = yield sheetUrls.map(url => this.getSheetAsJson(url, tokens))
-            this.rawBody = sheetJsons;
+            var sheetUrls = yield this.getSheetCsvGid(tokens);
+
+            var sheetJsons = yield sheetUrls.map(url => this.getSheetAsJson(url, tokens));
+
+            this.rawBody = {};
+            this.rawBody['sheets'] = _.zipObject(this.sheetNames, sheetJsons)
+
             this.domainPermissions = yield this.fetchDomainPermissions();
             return this.uploadToS3(false);
         }
