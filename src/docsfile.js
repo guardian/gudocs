@@ -200,7 +200,7 @@ export class SheetsFile extends GuFile {
     get stringBody() { return JSON.stringify(this.rawBody); }
 
     *update(newMetaData, tokens) {
-        var needsUpdating = true || this.rawBody === '' ||
+        var needsUpdating = this.rawBody === '' ||
                             this.metaData.modifiedDate !== newMetaData.modifiedDate;
         console.log(needsUpdating ? '' : 'not', `updating ${this.title}`)
         this.metaData = newMetaData;
