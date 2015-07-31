@@ -6,8 +6,8 @@ import google from 'googleapis'
 import { Converter } from 'csvtojson'
 import { jwtClient } from './auth.js'
 import { _ } from 'lodash'
+import Baby from 'babyparse'
 
-var Baby = require('babyparse');
 var drive = google.drive('v2')
 var key = require('../key.json');
 
@@ -58,7 +58,6 @@ export class FileManager {
 export class GuFile {
     constructor({metaData, lastUploadTest = null, lastUploadProd = null, rawBody = '', domainPermissions = 'unknown'}) {
         this.metaData = metaData;
-        this.gidNames;
         this.lastUploadTest = lastUploadTest
         this.lastUploadProd = lastUploadProd
         this.domainPermissions = domainPermissions
@@ -192,7 +191,7 @@ export class SheetsFile extends GuFile {
         var converter = new Converter({constructResult:true});
         var csvToJson = denodeify(converter.fromString.bind(converter));
         
-        json = (this.gidNames[gid] !== "tableDataSheet") ? Baby.parse(csv, { header: true }) : Baby.parse(csv, { header: false });
+        json = Baby.parse(csv, { header: this.gidNames[gid] !== "tableDataSheet" });
 
         return json.data;
     }
@@ -205,7 +204,6 @@ export class SheetsFile extends GuFile {
         console.log(needsUpdating ? '' : 'not', `updating ${this.title}`)
         this.metaData = newMetaData;
         if (needsUpdating) {
-            let self = this;
             var sheetUrls = yield this.getSheetCsvGid(tokens);
 
             var sheetJsons = yield sheetUrls.map(url => this.getSheetAsJson(url, tokens));
