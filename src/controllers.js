@@ -3,7 +3,10 @@ import archieml from 'archieml'
 import moment from 'moment'
 import { GuFile } from './docsfile'
 import gu from 'koa-gu'
-var key = require('../key.json');
+import fs from 'fs'
+import path from 'path'
+var key = require('../key.json')
+var cssPath = path.resolve(__dirname, '../build/main.css');
 
 exports.index = function *(){
     const docs2archieml = (yield gu.db.getObj(gu.config.dbkey)) || { files: {} };
@@ -11,7 +14,12 @@ exports.index = function *(){
         .sort(function(a,b) { return moment(b.metaData.modifiedDate) - moment(a.metaData.modifiedDate); })
         .map(v => GuFile.deserialize(v))
         .valueOf()
-    this.body = gu.tmpl('./templates/index.html', { docs2archieml: docs2archieml, files: files, email: key.client_email });
+    this.body = gu.tmpl('./templates/index.html', {
+        docs2archieml: docs2archieml,
+        files: files,
+        email: key.client_email,
+        css: fs.readFileSync(cssPath, 'utf8')
+    });
 };
 
 exports.publish = function *() {
