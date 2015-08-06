@@ -8,7 +8,7 @@
 			background: #f1f1f1;
 		}
 		.container {
-			max-width: 800px;
+			max-width: 1000px;
 			background: #fff;
 			box-sizing: border-box;
 			padding: 12px 20px;
@@ -21,6 +21,7 @@
 			font-family: 'Guardian Text Sans Web';
 			font-size: 14px;
 			border-collapse: collapse;
+			width: 100%;
 		}
 		table thead {
 			font-weight: bold;
@@ -68,7 +69,7 @@
 		.share-with span {
 			color: black;
 		}
-		.current, .old, .docs {
+		.current, .old, .docs, .table-embed {
 			  padding: 4px;
 			  border-radius: 4px;
 			  color: black;
@@ -77,6 +78,9 @@
 		}
 		.docs {
 			  background-color: rgba(0, 0, 180, 0.3);
+		}
+		.table-embed {
+			  background-color: rgba(211, 129, 34, 0.4);
 		}
 		.current {
 			  background-color: rgba(0, 136, 0, 0.24);
@@ -140,6 +144,9 @@
 					<td><span class="permission permission--{{ f.domainPermissions }}">{{ f.domainPermissions }}</span></td>
 					<td>
 						<a class="docs" href="{{ f.urlDocs }}">docs</a> /
+						{% if 'tableDataSheet' in f.rawBody.sheets %}
+							<a class="table-embed" target="_blank" href="http://interactive.guim.co.uk/2015/07/table-testing/embed/index.html?spreadsheet={{ f.id }}">table url</a> /
+						{% endif %}
 						<a class="{%if f.isTestCurrent() %}current{%else%}old{%endif%}"
 							href="{{ f.urlTest }}">test</a>
 						{% if f.urlProd %}
