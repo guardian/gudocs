@@ -20,7 +20,7 @@ module.exports = function(grunt) {
             dev: {
                 script: './src/cli.js',
                 options: {
-                    exec: ['babel-node --harmony'],
+                    exec: ['./node_modules/.bin/babel-node --harmony'],
                     env: { PORT: '4000' }
                 }
             }
