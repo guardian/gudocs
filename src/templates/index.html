@@ -36,6 +36,9 @@
 					<td><span class="permission permission--{{ f.domainPermissions }}">{{ f.domainPermissions }}</span></td>
 					<td>
 						<a class="docs" href="{{ f.urlDocs }}">docs</a> /
+						{% if 'tableDataSheet' in f.rawBody.sheets %}
+							<a class="table-embed" target="_blank" href="https://interactive.guim.co.uk/tools/tables/embed/index.html?spreadsheet={{ f.id }}">table url</a> /
+						{% endif %}
 						<a class="{%if f.isTestCurrent() %}current{%else%}old{%endif%}"
 							href="{{ f.urlTest }}">test</a>
 						{% if f.urlProd %}

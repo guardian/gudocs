@@ -80,7 +80,7 @@ table {
 .share-with span {
 	color: black;
 }
-.current, .old, .docs {
+.current, .old, .docs, .table-embed {
 	  padding: 4px;
 	  border-radius: 4px;
 	  color: black;
@@ -89,6 +89,9 @@ table {
 }
 .docs {
 	  background-color: rgba(0, 0, 180, 0.3);
+}
+.table-embed {
+	  background-color: rgba(211, 129, 34, 0.4);
 }
 .current {
 	  background-color: rgba(0, 136, 0, 0.24);
