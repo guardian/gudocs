@@ -37,7 +37,7 @@
 					<td>
 						<a class="docs" href="{{ f.urlDocs }}">docs</a> /
 						{% if 'tableDataSheet' in f.rawBody.sheets %}
-							<a class="table-embed" target="_blank" href="http://interactive.guim.co.uk/2015/07/table-testing/embed/index.html?spreadsheet={{ f.id }}">table url</a> /
+							<a class="table-embed" target="_blank" href="http://interactive.guim.co.uk/tools/tables/embed/index.html?spreadsheet={{ f.id }}">table url</a> /
 						{% endif %}
 						<a class="{%if f.isTestCurrent() %}current{%else%}old{%endif%}"
 							href="{{ f.urlTest }}">test</a>
