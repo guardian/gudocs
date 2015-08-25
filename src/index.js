@@ -40,6 +40,16 @@ function www(opts) {
     app.use(compress());
     app.use(koaBody());
     app.use(koaSession(app));
+
+
+    if (gu.config.base_url[gu.config.base_url.length -1] !== '/') {
+        app.use(function*(next) {
+            if (this.path === '/' || this.path === gu.config.base_url) {
+                this.redirect(gu.config.base_url + '/')
+            } else yield* next;
+        })
+    }
+
     app.use(gu.router.routes());
     app.use(gu.router.allowedMethods());
 

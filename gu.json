@@ -6,6 +6,8 @@
         "POST /publish": "publish"
     },
 
+    "logdir": "var/log",
+
     "secret": "supersecret",
     "aws_profile": "visuals",
     "s3bucket": "gdn-cdn",

@@ -17,7 +17,7 @@ export class FileManager {
 
     *getDb() {
         var db = (yield gu.db.getObj(gu.config.dbkey)) || { files: {} };
-        console.log(`${Object.keys(db.files).length} entries in db`)
+        gu.log.debug(`${Object.keys(db.files).length} existing entries in db`)
         return db;
     }
 
@@ -42,6 +42,10 @@ export class FileManager {
     *update() {
         var db = yield this.getDb();
         var fileMetas = yield this.fetchFilesMeta();
+        gu.log.debug(`Retrieved metadata for ${fileMetas.length} files`)
+        var lastModifiedFilesString = _.sortBy(fileMetas, 'modifiedDate')
+            .slice(-2).map(v => `'${v.title}' @ ${v.modifiedDate}`).reverse().join(' and ')
+        gu.log.debug(`Last 2 modified files: ${lastModifiedFilesString}`)
         var tokens = yield this.getTokens();
         for (let fileMeta of fileMetas) {
             let fileJSON = db.files[fileMeta.id] || {metaData: fileMeta};
@@ -87,7 +91,7 @@ export class GuFile {
 
     static deserialize(json) {
         var FileClass = this.types[json.metaData.mimeType];
-        if (!FileClass) console.log(`mimeType ${json.metaData.mimeType} not recognized`);
+        if (!FileClass) gu.log.error(`mimeType ${json.metaData.mimeType} not recognized`);
         else return new FileClass(json);
     }
 
@@ -135,7 +139,7 @@ export class DocsFile extends GuFile {
     *update(newMetaData, tokens) {
         var needsUpdating = this.rawBody === '' ||
                             this.metaData.modifiedDate !== newMetaData.modifiedDate;
-        console.log(needsUpdating ? '' : 'not', `updating ${this.title}`)
+        gu.log.info(needsUpdating ? '' : 'not', `updating \'${this.title}\'`)
         this.metaData = newMetaData;
         if (needsUpdating) {
             this.rawBody = yield this.fetchFileBody(tokens);
@@ -190,7 +194,7 @@ export class SheetsFile extends GuFile {
             });
         var converter = new Converter({constructResult:true});
         var csvToJson = denodeify(converter.fromString.bind(converter));
-        
+
         json = Baby.parse(csv, { header: this.gidNames[gid] !== "tableDataSheet" });
 
         return json.data;
@@ -201,7 +205,7 @@ export class SheetsFile extends GuFile {
     *update(newMetaData, tokens) {
         var needsUpdating = this.rawBody === '' ||
                             this.metaData.modifiedDate !== newMetaData.modifiedDate;
-        console.log(needsUpdating ? '' : 'not', `updating ${this.title}`)
+        gu.log.info(needsUpdating ? '' : 'not', `updating \'${this.title}\'`)
         this.metaData = newMetaData;
         if (needsUpdating) {
             var sheetUrls = yield this.getSheetCsvGid(tokens);

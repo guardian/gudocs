@@ -1,5 +1,6 @@
 bower_components
 build
+var
 npm-debug.log
 node_modules
 key.json
