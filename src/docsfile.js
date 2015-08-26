@@ -47,15 +47,25 @@ export class FileManager {
             .slice(-2).map(v => `'${v.title}' @ ${v.modifiedDate}`).reverse().join(' and ')
         gu.log.debug(`Last 2 modified files: ${lastModifiedFilesString}`)
         var tokens = yield this.getTokens();
+
+        var updatedFiles = [];
+        var notUpdatedFiles = [];
+
         for (let fileMeta of fileMetas) {
             let fileJSON = db.files[fileMeta.id] || {metaData: fileMeta};
             let guFile = GuFile.deserialize(fileJSON);
             if (guFile) {
-                yield guFile.update(fileMeta, tokens);
+                var updated = yield guFile.update(fileMeta, tokens);
+                (updated ? updatedFiles : notUpdatedFiles).push(guFile);
                 db.files[guFile.id] = guFile.serialize();
                 yield this.saveDb(db);
             }
         }
+
+        var updatedFilesStr = updatedFiles.length === 0 ? 'None' : updatedFiles.map(file => `'${file.title}'`).join(', ');
+        var notUpdatedFilesStr = notUpdatedFiles.length === 0 ? 'None' : notUpdatedFiles.map(file => `'${file.title}'`).join(', ');
+        gu.log.info(`Updated: ${updatedFilesStr}`)
+        gu.log.info(`Not updated: ${notUpdatedFilesStr}`)
     }
 }
 
@@ -139,14 +149,13 @@ export class DocsFile extends GuFile {
     *update(newMetaData, tokens) {
         var needsUpdating = this.rawBody === '' ||
                             this.metaData.modifiedDate !== newMetaData.modifiedDate;
-        gu.log.info(needsUpdating ? '' : 'not', `updating \'${this.title}\'`)
         this.metaData = newMetaData;
         if (needsUpdating) {
             this.rawBody = yield this.fetchFileBody(tokens);
             this.domainPermissions = yield this.fetchDomainPermissions();
-            return this.uploadToS3(false);
+            return this.uploadToS3(false).then(_ => needsUpdating);
         }
-        return new Promise(resolve => resolve())
+        return new Promise(resolve => resolve(needsUpdating))
     }
 
     fetchFileBody(tokens) {
@@ -205,7 +214,6 @@ export class SheetsFile extends GuFile {
     *update(newMetaData, tokens) {
         var needsUpdating = this.rawBody === '' ||
                             this.metaData.modifiedDate !== newMetaData.modifiedDate;
-        gu.log.info(needsUpdating ? '' : 'not', `updating \'${this.title}\'`)
         this.metaData = newMetaData;
         if (needsUpdating) {
             var sheetUrls = yield this.getSheetCsvGid(tokens);
@@ -216,8 +224,8 @@ export class SheetsFile extends GuFile {
             this.rawBody['sheets'] = _.zipObject(this.sheetNames, sheetJsons)
 
             this.domainPermissions = yield this.fetchDomainPermissions();
-            return this.uploadToS3(false);
+            return this.uploadToS3(false).then(_ => needsUpdating);
         }
-        return new Promise(resolve => resolve())
+        return new Promise(resolve => resolve(needsUpdating))
     }
 }
