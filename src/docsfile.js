@@ -42,7 +42,7 @@ export class FileManager {
     *update() {
         var db = yield this.getDb();
         var fileMetas = yield this.fetchFilesMeta();
-        gu.log.debug(`Retrieved metadata for ${fileMetas.length} files`)
+        gu.log.info(`Retrieved metadata for ${fileMetas.length} files`)
         var lastModifiedFilesString = _.sortBy(fileMetas, 'modifiedDate')
             .slice(-2).map(v => `'${v.title}' @ ${v.modifiedDate}`).reverse().join(' and ')
         gu.log.debug(`Last 2 modified files: ${lastModifiedFilesString}`)
