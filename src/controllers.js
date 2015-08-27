@@ -18,14 +18,12 @@ exports.index = function *(){
 };
 
 exports.publish = function *() {
-    const docs2archieml = (yield gu.db.getObj(gu.config.dbkey)) || { files: {} };
-    var docId = this.request.body.id;
-    var fileJSON = docs2archieml.files[docId];
-    if (fileJSON) {
-        var guFile = GuFile.deserialize(fileJSON);
+    var id = this.request.body.id;
+    var guFiles = yield FileManager.getGuFiles([id]);
+    var guFile = guFiles[0];
+    if (guFile) {
         yield guFile.uploadToS3(true);
-        docs2archieml.files[docId] = guFile.serialize();
-        gu.db.setObj(gu.config.dbkey, docs2archieml);
+        yield FileManager.saveGuFiles([guFile])
         this.redirect(this.headers.referer);
     } else {
         this.body = "File ID not found...???"
