@@ -18,7 +18,7 @@ export class FileManager {
     static async getStateDb() {
         var stateDbString = await gu.db.get(gu.config.dbkey);
         return stateDbString ? JSON.parse(stateDbString) :
-                                { lastChangeId: 0 }
+                                { lastChangeId: 0, lastSaved: new Date('1900-01-01') }
     }
 
     static async saveStateDb(db) {
@@ -35,7 +35,7 @@ export class FileManager {
 
     static async getAllGuFiles(start = 0, end = -1) {
         var ids = await gu.db.zrevrange(`${gu.config.dbkey}:index`, start, end);
-        return await FileManager.getGuFiles(ids);
+        return ids.length ? await FileManager.getGuFiles(ids) : [];
     }
 
     static async saveGuFiles(files) {
