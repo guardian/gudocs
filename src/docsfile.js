@@ -64,9 +64,9 @@ export class FileManager {
 
     async update() {
         var db = await FileManager.getStateDb();
-        gu.log.info(`Fetching new changes starting from ChangeId ${1 + Number(db.lastChangeId)}`)
-        var changeList = await this.fetchChangeList(Number(db.lastChangeId) + 1);
-        gu.log.info(`${changeList.items.length} new changes. Largest ChangeId: ${changeList.largestChangeId}`)
+        var startChangeId = 1 + Number(db.lastChangeId)
+        var changeList = await this.fetchChangeList(startChangeId);
+        gu.log.info(`${changeList.items.length} new changes since ChangeId ${startChangeId}. Largest ChangeId: ${changeList.largestChangeId}`)
 
         if (changeList.items.length > 0) {
             var tokens = await this.getTokens();
