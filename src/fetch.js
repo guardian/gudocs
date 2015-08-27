@@ -15,7 +15,6 @@ class Gudocs {
 
 co(function*() {
     gu.init(false);
-    gu.log.info('Fetching...')
     var docs2archieml = new Gudocs(gu.config)
     yield docs2archieml.run();
 }).catch(err => {

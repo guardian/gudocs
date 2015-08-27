@@ -15,57 +15,77 @@ export class FileManager {
     constructor() {
     }
 
-    *getDb() {
-        var db = (yield gu.db.getObj(gu.config.dbkey)) || { files: {} };
-        gu.log.debug(`${Object.keys(db.files).length} existing entries in db`)
-        return db;
+    static async getStateDb() {
+        var stateDbString = await gu.db.get(gu.config.dbkey);
+        return stateDbString ? JSON.parse(stateDbString) :
+                                { lastChangeId: 0 }
     }
 
-    *saveDb(db) {
+    static async saveStateDb(db) {
         db.lastSaved = new Date();
-        return gu.db.setObj(gu.config.dbkey, db);
+        return gu.db.set(gu.config.dbkey, JSON.stringify(db));
     }
 
-    *getTokens() {
-        return (yield jwtClient.authorize.bind(jwtClient));
+    static async getGuFiles(ids) {
+        var keys = ids.map(id => `${gu.config.dbkey}:${id}`)
+        var strs = await gu.db.mget.call(gu.db, keys);
+        var jsons = strs.map(JSON.parse);
+        return jsons.map(json => json && GuFile.deserialize(json));
     }
 
-    *fetchFilesMeta() {
+    static async getAllGuFiles(start = 0, end = -1) {
+        var ids = await gu.db.zrevrange(`${gu.config.dbkey}:index`, start, end);
+        return await FileManager.getGuFiles(ids);
+    }
+
+    static async saveGuFiles(files) {
+        var saveArgs = _.flatten( files.map(file => [`${gu.config.dbkey}:${file.id}`, file.serialize()]) )
+        await gu.db.mset.call(gu.db, saveArgs);
+
+        var indexArgs = _.flatten( files.map(file => [file.unixdate, file.id]) )
+        indexArgs.unshift(`${gu.config.dbkey}:index`)
+        await gu.db.zadd.call(gu.db, indexArgs);
+    }
+
+    async getTokens() {
+        var promiseFn = denodeify(jwtClient.authorize.bind(jwtClient))
+        return await promiseFn();
+    }
+
+    async fetchChangeList(startChangeId) {
         var validTypes = Object.keys(GuFile.types);
-        var fileList = yield denodeify(drive.files.list)({ auth: jwtClient });
-        if (fileList.kind !== 'drive#fileList')
-            throw new Error('Unexpected response ( fileList.kind !== \'drive#fileList\' )');
-        return fileList.items
-          .filter(file => validTypes.indexOf(file.mimeType) !== -1 )
+        var changeList = await denodeify(drive.changes.list)({ auth: jwtClient, startChangeId: startChangeId });
+        var fs = require('fs');
+        fs.writeFileSync('test.json', JSON.stringify(changeList, null, 2))
+        if (changeList.kind !== 'drive#changeList')
+            throw new Error('Unexpected response ( changeList.kind !== \'drive#changeList\' )');
+        return changeList;
     }
 
-    *update() {
-        var db = yield this.getDb();
-        var fileMetas = yield this.fetchFilesMeta();
-        gu.log.info(`Retrieved metadata for ${fileMetas.length} files`)
-        var lastModifiedFilesString = _.sortBy(fileMetas, 'modifiedDate')
-            .slice(-2).map(v => `'${v.title}' @ ${v.modifiedDate}`).reverse().join(' and ')
-        gu.log.debug(`Last 2 modified files: ${lastModifiedFilesString}`)
-        var tokens = yield this.getTokens();
+    async update() {
+        var db = await FileManager.getStateDb();
+        gu.log.info(`Fetching new changest starting from ${1 + Number(db.lastChangeId)}`)
+        var changeList = await this.fetchChangeList(Number(db.lastChangeId) + 1);
+        gu.log.info(`${changeList.items.length} new changes. Largest: ${changeList.largestChangeId}`)
 
-        var updatedFiles = [];
-        var notUpdatedFiles = [];
+        if (changeList.items.length > 0) {
+            var tokens = await this.getTokens();
+            var changedFiles = changeList.items.map(change => change.file)
+            var ids = changedFiles.map(file => file.id)
+            var existing = await FileManager.getGuFiles(ids);
+            existing.forEach((guFile, i) => guFile && (guFile.metaData = changedFiles[i])) // update existing
+            var guFiles = existing
+                .map((guFile, i) => guFile || GuFile.deserialize({metaData: changedFiles[i]})) // create new
+                .filter(guFile => !!guFile) // filter any broken / unrecognized
 
-        for (let fileMeta of fileMetas) {
-            let fileJSON = db.files[fileMeta.id] || {metaData: fileMeta};
-            let guFile = GuFile.deserialize(fileJSON);
-            if (guFile) {
-                var updated = yield guFile.update(fileMeta, tokens);
-                (updated ? updatedFiles : notUpdatedFiles).push(guFile);
-                db.files[guFile.id] = guFile.serialize();
-                yield this.saveDb(db);
-            }
+            for (var i = 0; i < guFiles.length; i++)
+                await guFiles[i].update(tokens);
+
+            await FileManager.saveGuFiles(guFiles);
+
+            db.lastChangeId = changeList.largestChangeId;
+            await FileManager.saveStateDb(db);
         }
-
-        var updatedFilesStr = updatedFiles.length === 0 ? 'None' : updatedFiles.map(file => `'${file.title}'`).join(', ');
-        var notUpdatedFilesStr = notUpdatedFiles.length === 0 ? 'None' : notUpdatedFiles.map(file => `'${file.title}'`).join(', ');
-        gu.log.info(`Updated: ${updatedFilesStr}`)
-        gu.log.info(`Not updated: ${notUpdatedFilesStr}`)
     }
 }
 
@@ -89,6 +109,8 @@ export class GuFile {
 
     get urlDocs() { return this.metaData.alternateLink; }
 
+    get unixdate() { return Date.parse(this.metaData.modifiedDate); }
+
     isTestCurrent() { return this.lastUploadTest === this.metaData.modifiedDate }
     isProdCurrent() { return this.lastUploadProd === this.metaData.modifiedDate }
 
@@ -101,24 +123,24 @@ export class GuFile {
 
     static deserialize(json) {
         var FileClass = this.types[json.metaData.mimeType];
-        if (!FileClass) gu.log.error(`mimeType ${json.metaData.mimeType} not recognized`);
+        if (!FileClass) gu.log.warn(`mimeType ${json.metaData.mimeType} not recognized`);
         else return new FileClass(json);
     }
 
     serialize() {
-        return {
+        return JSON.stringify({
             metaData: this.metaData,
             rawBody: this.rawBody,
             lastUploadTest: this.lastUploadTest,
             lastUploadProd: this.lastUploadProd,
             domainPermissions: this.domainPermissions
-        };
+        });
     }
 
-    *fetchDomainPermissions() {
+    async fetchDomainPermissions() {
         if (gu.config.requireDomainPermissions) {
             var listPermissions = denodeify(drive.permissions.list);
-            var perms = yield listPermissions({auth: jwtClient, fileId: this.id});
+            var perms = await listPermissions({auth: jwtClient, fileId: this.id});
             var domainPermission = perms.items.find(i => i.name === gu.config.requireDomainPermissions)
             if (domainPermission) return domainPermission.role;
             else if(perms.items.find(i => i.emailAddress === key.client_email)) {
@@ -146,16 +168,10 @@ export class DocsFile extends GuFile {
 
     get archieJSON() { return archieml.load(this.rawBody) }
 
-    *update(newMetaData, tokens) {
-        var needsUpdating = this.rawBody === '' ||
-                            this.metaData.modifiedDate !== newMetaData.modifiedDate;
-        this.metaData = newMetaData;
-        if (needsUpdating) {
-            this.rawBody = yield this.fetchFileBody(tokens);
-            this.domainPermissions = yield this.fetchDomainPermissions();
-            return this.uploadToS3(false).then(_ => needsUpdating);
-        }
-        return new Promise(resolve => resolve(needsUpdating))
+    async update(tokens) {
+        this.rawBody = await this.fetchFileBody(tokens);
+        this.domainPermissions = await this.fetchDomainPermissions();
+        return this.uploadToS3(false);
     }
 
     fetchFileBody(tokens) {
@@ -172,8 +188,8 @@ export class DocsFile extends GuFile {
 
 export class SheetsFile extends GuFile {
 
-    *getSheetCsvGid(tokens) {
-        var embedHTML = yield rp({
+    async getSheetCsvGid(tokens) {
+        var embedHTML = await rp({
             uri: this.metaData.embedLink,
             headers: {
                 'Authorization': tokens.token_type + ' ' + tokens.access_token
@@ -192,10 +208,10 @@ export class SheetsFile extends GuFile {
         return gids;
     }
 
-    *getSheetAsJson(gid, tokens) {
+    async getSheetAsJson(gid, tokens) {
         var baseUrl = this.metaData.exportLinks['text/csv'],
             json,
-            csv = yield rp({
+            csv = await rp({
                 uri: `${baseUrl}&gid=${gid}`,
                 headers: {
                     'Authorization': tokens.token_type + ' ' + tokens.access_token
@@ -211,21 +227,11 @@ export class SheetsFile extends GuFile {
 
     get stringBody() { return JSON.stringify(this.rawBody); }
 
-    *update(newMetaData, tokens) {
-        var needsUpdating = this.rawBody === '' ||
-                            this.metaData.modifiedDate !== newMetaData.modifiedDate;
-        this.metaData = newMetaData;
-        if (needsUpdating) {
-            var sheetUrls = yield this.getSheetCsvGid(tokens);
-
-            var sheetJsons = yield sheetUrls.map(url => this.getSheetAsJson(url, tokens));
-
-            this.rawBody = {};
-            this.rawBody['sheets'] = _.zipObject(this.sheetNames, sheetJsons)
-
-            this.domainPermissions = yield this.fetchDomainPermissions();
-            return this.uploadToS3(false).then(_ => needsUpdating);
-        }
-        return new Promise(resolve => resolve(needsUpdating))
+    async update(tokens) {
+        var sheetUrls = await this.getSheetCsvGid(tokens);
+        var sheetJsons = await Promise.all(sheetUrls.map(url => this.getSheetAsJson(url, tokens)))
+        this.rawBody = { sheets: _.zipObject(this.sheetNames, sheetJsons) };
+        this.domainPermissions = await this.fetchDomainPermissions();
+        return this.uploadToS3(false);
     }
 }

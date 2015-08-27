@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import archieml from 'archieml'
 import moment from 'moment'
-import { GuFile } from './docsfile'
+import { FileManager } from './docsfile'
 import gu from 'koa-gu'
 import fs from 'fs'
 import path from 'path'
@@ -9,14 +9,9 @@ var key = require('../key.json')
 var cssPath = path.resolve(__dirname, '../build/main.css');
 
 exports.index = function *(){
-    const docs2archieml = (yield gu.db.getObj(gu.config.dbkey)) || { files: {} };
-    const files = _(docs2archieml.files).values()
-        .sort(function(a,b) { return moment(b.metaData.modifiedDate) - moment(a.metaData.modifiedDate); })
-        .map(v => GuFile.deserialize(v))
-        .valueOf()
     this.body = gu.tmpl('./templates/index.html', {
-        docs2archieml: docs2archieml,
-        files: files,
+        docs2archieml: yield FileManager.getStateDb(),
+        files: yield FileManager.getAllGuFiles(),
         email: key.client_email,
         css: fs.readFileSync(cssPath, 'utf8')
     });
