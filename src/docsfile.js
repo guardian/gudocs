@@ -82,10 +82,10 @@ export class FileManager {
                 await guFiles[i].update(tokens);
 
             await FileManager.saveGuFiles(guFiles);
-
-            db.lastChangeId = changeList.largestChangeId;
-            await FileManager.saveStateDb(db);
         }
+
+        db.lastChangeId = changeList.largestChangeId;
+        await FileManager.saveStateDb(db);
     }
 }
 
