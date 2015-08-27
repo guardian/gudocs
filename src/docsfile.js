@@ -150,9 +150,10 @@ export class GuFile {
     }
 
     uploadToS3(prod=false) {
+        var uploadPath = prod ? this.pathProd : this.pathTest;
         var params = {
             Bucket: gu.config.s3bucket,
-            Key: prod ? this.pathProd : this.pathTest,
+            Key: uploadPath,
             Body: this.stringBody,
             ACL: 'public-read',
             ContentType: 'application/json',
@@ -161,6 +162,7 @@ export class GuFile {
         var promise = gu.s3.putObject(params);
         promise.then(_ =>
             this[prod ? 'lastUploadProd' : 'lastUploadTest'] = this.metaData.modifiedDate);
+        promise.then(_ => gu.log.info(`Uploaded ${this.title} to ${uploadPath}`))
         return promise;
     }
 }
