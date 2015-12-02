@@ -7,6 +7,7 @@ Google Docs to S3 uploader
 Setup
 -----
 
+1. Install `redis`
 1. `npm install`
 1. Download service account `key.json` from Google developer console into root directory
 
