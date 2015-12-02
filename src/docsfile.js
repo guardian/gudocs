@@ -78,10 +78,11 @@ export class FileManager {
                 .map((guFile, i) => guFile || GuFile.deserialize({metaData: changedFiles[i]})) // create new
                 .filter(guFile => !!guFile) // filter any broken / unrecognized
 
-            for (var i = 0; i < guFiles.length; i++)
-                await guFiles[i].update(tokens);
-
-            await FileManager.saveGuFiles(guFiles);
+            if (guFiles.length) {
+                for (var i = 0; i < guFiles.length; i++)
+                    await guFiles[i].update(tokens);
+                await FileManager.saveGuFiles(guFiles);
+            }
         }
 
         db.lastChangeId = changeList.largestChangeId;
