@@ -14,7 +14,7 @@ class Gudocs {
 
     *run() {
         var fileManager = new FileManager();
-        yield fileManager.update({ignoreStartId: !!program.all});
+        yield fileManager.update({fetchAll: !!program.all});
     }
 }
 
