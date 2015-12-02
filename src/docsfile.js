@@ -70,7 +70,7 @@ export class FileManager {
 
         if (changeList.items.length > 0) {
             var tokens = await this.getTokens();
-            var changedFiles = changeList.items.map(change => change.file)
+            var changedFiles = changeList.items.map(change => change.file).filter(f => f)
             var ids = changedFiles.map(file => file.id)
             var existing = await FileManager.getGuFiles(ids);
             existing.forEach((guFile, i) => guFile && (guFile.metaData = changedFiles[i])) // update existing
