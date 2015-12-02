@@ -1,6 +1,11 @@
 import gu from 'koa-gu'
 import co from 'co'
 import { FileManager } from './docsfile'
+import program from 'commander'
+
+program
+  .option('-a, --all', 'fetch all changes', false)
+  .parse(process.argv);
 
 class Gudocs {
     constructor(opts) {
@@ -9,7 +14,7 @@ class Gudocs {
 
     *run() {
         var fileManager = new FileManager();
-        yield fileManager.update();
+        yield fileManager.update({ignoreStartId: !!program.all});
     }
 }
 

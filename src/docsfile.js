@@ -1,3 +1,4 @@
+import fs from 'fs'
 import gu from 'koa-gu'
 import rp from 'request-promise'
 import archieml from 'archieml'
@@ -53,18 +54,28 @@ export class FileManager {
     }
 
     async fetchChangeList(startChangeId) {
-        var validTypes = Object.keys(GuFile.types);
-        var changeList = await denodeify(drive.changes.list)({ auth: jwtClient, startChangeId: startChangeId });
-        var fs = require('fs');
-        fs.writeFileSync('test.json', JSON.stringify(changeList, null, 2))
-        if (changeList.kind !== 'drive#changeList')
-            throw new Error('Unexpected response ( changeList.kind !== \'drive#changeList\' )');
-        return changeList;
+        return new Promise(resolve => {
+            var retrievePageOfChanges = function(requestOpts, items, largestChangeId) {
+                drive.changes.list(requestOpts, (err, resp) => {
+                    if (err) { console.error(err); process.exit(1); }
+                    items = items.concat(resp.items);
+                    var nextPageToken = resp.nextPageToken;
+                    if (nextPageToken) {
+                        retrievePageOfChanges(
+                            {auth: jwtClient, pageToken: nextPageToken},
+                            items, Math.max(resp.largestChangeId, largestChangeId));
+                    } else resolve({items: items, largestChangeId});
+                })
+            }
+            var initialRequestOpts = {auth:jwtClient};
+            if (startChangeId) initialRequestOpts.startChangeId = startChangeId;
+            retrievePageOfChanges(initialRequestOpts, [], 0);
+        });
     }
 
-    async update() {
+    async update({ignoreStartId = false}) {
         var db = await FileManager.getStateDb();
-        var startChangeId = 1 + Number(db.lastChangeId)
+        var startChangeId = ignoreStartId ? 1 : 1 + Number(db.lastChangeId);
         var changeList = await this.fetchChangeList(startChangeId);
         gu.log.info(`${changeList.items.length} new changes since ChangeId ${startChangeId}. Largest ChangeId: ${changeList.largestChangeId}`)
 
