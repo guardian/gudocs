@@ -13,7 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "archieml": "^0.3.0",
+    "archieml": "^0.3.1",
     "aws-sdk": "^2.1.39",
     "babel": "^5.8.21",
     "babyparse": "^0.4.3",
