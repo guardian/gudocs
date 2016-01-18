@@ -10,9 +10,10 @@ var cssPath = path.resolve(__dirname, '../build/main.css');
 
 exports.index = function *(){
     var page = parseInt(this.request.query.page) || 0;
-    var size = parseInt(this.request.query.size) || 200;
+    var size = parseInt(this.request.query.size) || 100;
 
     this.body = gu.tmpl('./templates/index.html', {
+        page, size,
         docs2archieml: yield FileManager.getStateDb(),
         files: yield FileManager.getAllGuFiles(page * size, size),
         email: key.client_email,
