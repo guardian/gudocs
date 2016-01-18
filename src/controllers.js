@@ -15,7 +15,7 @@ exports.index = function *(){
     this.body = gu.tmpl('./templates/index.html', {
         page, size,
         docs2archieml: yield FileManager.getStateDb(),
-        files: yield FileManager.getAllGuFiles(page * size, size),
+        files: yield FileManager.getAllGuFiles(page * size, (page + 1) * size - 1),
         email: key.client_email,
         css: fs.readFileSync(cssPath, 'utf8')
     });
