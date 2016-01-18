@@ -10,7 +10,7 @@ var cssPath = path.resolve(__dirname, '../build/main.css');
 
 exports.index = function *(){
     var page = parseInt(this.request.query.page) || 0;
-    var size = parseInt(this.request.query.size) || 100;
+    var size = parseInt(this.request.query.size) || 50;
 
     this.body = gu.tmpl('./templates/index.html', {
         page, size,
