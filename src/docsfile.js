@@ -109,6 +109,8 @@ export class FileManager {
                 for (var i = 0; i < guFiles.length; i++) {
                     await guFiles[i].update(tokens).catch(err => {
                         gu.log.error('Failed to update', guFiles[i].id, guFiles[i].title)
+                        gu.log.error(err);
+                        gu.log.error(err.stack);
                     });
                 }
                 await FileManager.saveGuFiles(guFiles);
