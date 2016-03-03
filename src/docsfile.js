@@ -8,9 +8,19 @@ import { Converter } from 'csvtojson'
 import { jwtClient } from './auth.js'
 import { _ } from 'lodash'
 import Baby from 'babyparse'
+import Bottleneck from 'bottleneck'
 
 var drive = google.drive('v2')
 var key = require('../key.json');
+
+var limiter = new Bottleneck(1, 100);
+
+function docsRP(opts) {
+    return limiter.schedule(rp, opts).catch(err => {
+        gu.log.error(`Failed to get ${opts.uri}: ${err.statusCode}`);
+        throw err;
+    });
+}
 
 export class FileManager {
     constructor() {
@@ -211,7 +221,7 @@ export class DocsFile extends GuFile {
     }
 
     fetchFileBody(tokens) {
-      return rp({
+      return docsRP({
           uri: this.metaData.exportLinks['text/plain'],
           headers: {
               'Authorization': tokens.token_type + ' ' + tokens.access_token
@@ -225,7 +235,7 @@ export class DocsFile extends GuFile {
 export class SheetsFile extends GuFile {
 
     async getSheetCsvGid(tokens) {
-        var embedHTML = await rp({
+        var embedHTML = await docsRP({
             uri: this.metaData.embedLink,
             headers: {
                 'Authorization': tokens.token_type + ' ' + tokens.access_token
@@ -247,7 +257,7 @@ export class SheetsFile extends GuFile {
     async getSheetAsJson(gid, tokens) {
         var baseUrl = this.metaData.exportLinks['text/csv'],
             json,
-            csv = await rp({
+            csv = await docsRP({
                 uri: `${baseUrl}&gid=${gid}`,
                 headers: {
                     'Authorization': tokens.token_type + ' ' + tokens.access_token

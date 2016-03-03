@@ -17,6 +17,7 @@
     "aws-sdk": "^2.1.39",
     "babel": "^5.8.21",
     "babyparse": "^0.4.3",
+    "bottleneck": "^1.10.2",
     "callsite": "^1.0.0",
     "co": "^4.5.4",
     "commander": "^2.8.1",
