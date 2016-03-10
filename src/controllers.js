@@ -11,9 +11,10 @@ var cssPath = path.resolve(__dirname, '../build/main.css');
 exports.index = function *(){
     var page = parseInt(this.request.query.page) || 0;
     var size = parseInt(this.request.query.size) || 50;
+    var dev = this.request.query.dev !== undefined;
 
     this.body = gu.tmpl('./templates/index.html', {
-        page, size,
+        page, size, dev,
         docs2archieml: yield FileManager.getStateDb(),
         files: yield FileManager.getAllGuFiles(page * size, (page + 1) * size - 1),
         email: key.client_email,
@@ -26,6 +27,9 @@ exports.publish = function *() {
     var guFiles = yield FileManager.getGuFiles([id]);
     var guFile = guFiles[0];
     if (guFile) {
+        if (this.request.query.force) {
+            yield guFile.update(yield FileManager.getTokens());
+        }
         yield guFile.uploadToS3(true);
         yield FileManager.saveGuFiles([guFile])
         this.redirect(this.headers.referer);

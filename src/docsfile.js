@@ -48,7 +48,7 @@ export class FileManager {
         await gu.db.zadd.call(gu.db, indexArgs);
     }
 
-    async getTokens() {
+    static async getTokens() {
         var promiseFn = denodeify(jwtClient.authorize.bind(jwtClient))
         return await promiseFn();
     }
@@ -96,7 +96,7 @@ export class FileManager {
         }
 
         if (changeList.items.length > 0) {
-            var tokens = await this.getTokens();
+            var tokens = await FileManager.getTokens();
             var changedFiles = changeList.items.map(change => change.file).filter(f => f)
             var ids = changedFiles.map(file => file.id)
             var existing = await FileManager.getGuFiles(ids);
