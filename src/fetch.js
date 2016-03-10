@@ -5,6 +5,7 @@ import program from 'commander'
 
 program
   .option('-a, --all', 'fetch all changes', false)
+  .option('--id [id]', 'fetch specific id')
   .parse(process.argv);
 
 class Gudocs {
@@ -14,7 +15,7 @@ class Gudocs {
 
     *run() {
         var fileManager = new FileManager();
-        yield fileManager.update({fetchAll: !!program.all});
+        yield fileManager.update({fetchAll: !!program.all, fileId: program.id});
     }
 }
 
