@@ -17,13 +17,13 @@
     "aws-sdk": "^2.1.39",
     "babel": "^5.8.21",
     "babyparse": "^0.4.3",
-    "bottleneck": "^1.10.2",
     "callsite": "^1.0.0",
     "co": "^4.5.4",
     "commander": "^2.8.1",
     "csvtojson": "^0.4.1",
     "debug": "^2.2.0",
     "denodeify": "^1.2.1",
+    "entities": "^1.1.1",
     "googleapis": "^2.0.5",
     "koa": "^0.21.0",
     "koa-body": "^1.2.1",
@@ -37,7 +37,8 @@
     "moment": "^2.10.3",
     "redis": "^0.12.1",
     "request-promise": "^0.4.2",
-    "swig": "^1.4.2"
+    "swig": "^1.4.2",
+    "xlsx": "^0.8.0"
   },
   "devDependencies": {
     "bower": "^1.5.1",
