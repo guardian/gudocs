@@ -240,7 +240,6 @@ export class SheetsFile extends GuFile {
             var header = sheetName === 'tableDataSheet' ? 1 : undefined;
             return sheet_to_json(sheet, {header});
         })
-        fs.writeFileSync('test.json', JSON.stringify(sheets, null, 2));
         return {sheets};
     }
 
