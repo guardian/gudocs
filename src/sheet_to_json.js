@@ -59,7 +59,7 @@ function decode_format_cell(cell, v) {
 }
 
 function sheet_to_json(sheet, opts){
-    var val, row, range, header = 0, offset = 1, r, hdr = [], lasti, R, C, v;
+    var val, row, range, header = 0, offset = 1, r, hdr = [], lasti = 0, R, C, v;
     var o = opts != null ? opts : {};
     var raw = o.raw;
     if(sheet == null || sheet["!ref"] == null) return [];
