@@ -230,7 +230,7 @@ export class DocsFile extends GuFile {
 export class SheetsFile extends GuFile {
     async fetchFileJSON(tokens) {
         var sheetODS = await rp({
-            'uri': this.metaData.exportLinks['application/x-vnd.oasis.opendocument.spreadsheet'],
+            'uri': this.metaData.exportLinks['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
             'headers': {
                 'Authorization': tokens.token_type + ' ' + tokens.access_token
             },

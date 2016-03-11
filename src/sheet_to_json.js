@@ -2,6 +2,7 @@
 // Differences:
 //   decode entities
 //   allow empty headers/values
+//   allow empty rows, but not trailing empty rows
 
 import entities from 'entities'
 
@@ -58,7 +59,7 @@ function decode_format_cell(cell, v) {
 }
 
 function sheet_to_json(sheet, opts){
-    var val, row, range, header = 0, offset = 1, r, hdr = [], R, C, v;
+    var val, row, range, header = 0, offset = 1, r, hdr = [], lasti, R, C, v;
     var o = opts != null ? opts : {};
     var raw = o.raw;
     if(sheet == null || sheet["!ref"] == null) return [];
@@ -109,11 +110,14 @@ function sheet_to_json(sheet, opts){
                     default: throw 'unrecognized type ' + val.t;
                 }
                 row[hdr[C]] = raw ? v : decode_format_cell(val,v);
+                if (v !== undefined) {
+                    lasti = outi;
+                }
             }
         }
         out[outi++] = row;
     }
-    out.length = outi;
+    out.length = lasti + 1;
     return out;
 }
 
