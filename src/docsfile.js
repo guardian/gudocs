@@ -83,7 +83,7 @@ export class FileManager {
         });
     }
 
-    async update({fetchAll = false}) {
+    async update({fetchAll = false, fileId = ''}) {
         var db = await FileManager.getStateDb();
         var changeList;
         if (fetchAll) {
@@ -107,6 +107,7 @@ export class FileManager {
 
             if (guFiles.length) {
                 for (var i = 0; i < guFiles.length; i++) {
+                    if (fileId && guFiles[i].id !== fileId) continue;
                     await guFiles[i].update(tokens).catch(err => {
                         gu.log.error('Failed to update', guFiles[i].id, guFiles[i].title)
                         gu.log.error(err);
