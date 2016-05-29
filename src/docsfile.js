@@ -2,12 +2,14 @@ import fs from 'fs'
 import gu from 'koa-gu'
 import rp from 'request-promise'
 import archieml from 'archieml'
+import XLSX from 'xlsx'
 import denodeify from 'denodeify'
 import google from 'googleapis'
 import { Converter } from 'csvtojson'
 import { jwtClient } from './auth.js'
 import { _ } from 'lodash'
 import Baby from 'babyparse'
+import sheet_to_json from './sheet_to_json'
 
 var drive = google.drive('v2')
 var key = require('../key.json');
@@ -109,9 +111,11 @@ export class FileManager {
                 for (var i = 0; i < guFiles.length; i++) {
                     if (fileId && guFiles[i].id !== fileId) continue;
                     await guFiles[i].update(tokens).catch(err => {
-                        gu.log.error('Failed to update', guFiles[i].id, guFiles[i].title)
-                        gu.log.error(err);
-                        gu.log.error(err.stack);
+                        gu.log.error('Failed to update', guFiles[i].title)
+                        gu.log.error('Error:', err);
+                        if (err && err.stack) {
+                            gu.log.error(err.stack);
+                        }
                     });
                 }
                 await FileManager.saveGuFiles(guFiles);
@@ -183,6 +187,14 @@ export class GuFile {
         } else return 'disabled';
     }
 
+    async update(tokens) {
+        gu.log.info(`Updating ${this.title}`);
+
+        this.rawBody = await this.fetchFileJSON(tokens);
+        this.domainPermissions = await this.fetchDomainPermissions();
+        return this.uploadToS3(false);
+    }
+
     uploadToS3(prod=false) {
         var uploadPath = prod ? this.pathProd : this.pathTest;
         var params = {
@@ -201,16 +213,7 @@ export class GuFile {
     }
 }
 export class DocsFile extends GuFile {
-
-    get archieJSON() { return archieml.load(this.rawBody) }
-
-    async update(tokens) {
-        this.rawBody = await this.fetchFileBody(tokens);
-        this.domainPermissions = await this.fetchDomainPermissions();
-        return this.uploadToS3(false);
-    }
-
-    fetchFileBody(tokens) {
+    fetchFileJSON(tokens) {
       return rp({
           uri: this.metaData.exportLinks['text/plain'],
           headers: {
@@ -219,55 +222,26 @@ export class DocsFile extends GuFile {
       });
     }
 
+    get archieJSON() { return archieml.load(this.rawBody) }
+
     get stringBody() { return JSON.stringify(this.archieJSON); }
 }
 
 export class SheetsFile extends GuFile {
-
-    async getSheetCsvGid(tokens) {
-        var embedHTML = await rp({
-            uri: this.metaData.embedLink,
-            headers: {
+    async fetchFileJSON(tokens) {
+        var sheetODS = await rp({
+            'uri': this.metaData.exportLinks['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+            'headers': {
                 'Authorization': tokens.token_type + ' ' + tokens.access_token
-            }
+            },
+            'encoding': null
         });
-        var gidRegex = /gid=(\d+)/g,
-            nameRegex = /(name: ")([^"]*)/g;
-
-        var gidMatch, gids = [], nameMatch, sheetNames = [];
-        while (gidMatch = gidRegex.exec(embedHTML)) gids.push(gidMatch[1]);
-        while (nameMatch = nameRegex.exec(embedHTML)) sheetNames.push(nameMatch[2]);
-
-        this.gidNames = _.object(gids, sheetNames);
-        this.sheetNames = sheetNames;
-
-        return gids;
-    }
-
-    async getSheetAsJson(gid, tokens) {
-        var baseUrl = this.metaData.exportLinks['text/csv'],
-            json,
-            csv = await rp({
-                uri: `${baseUrl}&gid=${gid}`,
-                headers: {
-                    'Authorization': tokens.token_type + ' ' + tokens.access_token
-                }
-            });
-        var converter = new Converter({constructResult:true});
-        var csvToJson = denodeify(converter.fromString.bind(converter));
-
-        json = Baby.parse(csv, { header: this.gidNames[gid] !== "tableDataSheet" });
-
-        return json.data;
+        var sheets = _.mapValues(XLSX.read(sheetODS).Sheets, (sheet, sheetName) => {
+            var header = sheetName === 'tableDataSheet' ? 1 : undefined;
+            return sheet_to_json(sheet, {header});
+        })
+        return {sheets};
     }
 
     get stringBody() { return JSON.stringify(this.rawBody); }
-
-    async update(tokens) {
-        var sheetUrls = await this.getSheetCsvGid(tokens);
-        var sheetJsons = await Promise.all(sheetUrls.map(url => this.getSheetAsJson(url, tokens)))
-        this.rawBody = { sheets: _.zipObject(this.sheetNames, sheetJsons) };
-        this.domainPermissions = await this.fetchDomainPermissions();
-        return this.uploadToS3(false);
-    }
 }
