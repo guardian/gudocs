@@ -27,10 +27,7 @@ exports.publish = function *() {
     var guFiles = yield FileManager.getGuFiles([id]);
     var guFile = guFiles[0];
     if (guFile) {
-        if (this.request.query.force) {
-            yield guFile.update(yield FileManager.getTokens());
-        }
-        yield guFile.uploadToS3(true);
+        yield guFile.update(yield FileManager.getTokens());
         yield FileManager.saveGuFiles([guFile])
         this.redirect(this.headers.referer);
     } else {
