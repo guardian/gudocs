@@ -2,11 +2,11 @@ import gu from 'koa-gu'
 import denodeify from 'denodeify'
 import google from 'googleapis'
 import rp from 'request-promise'
+import key from '../key.json'
 
 var drive = google.drive('v2');
 var sheets = google.sheets('v4');
 
-var key = require('../key.json');
 var auth = new google.auth.JWT(key.client_email, null, key.private_key, ['https://www.googleapis.com/auth/drive']);
 
 const authorize = denodeify(auth.authorize.bind(auth));

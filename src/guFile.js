@@ -3,8 +3,7 @@ import archieml from 'archieml'
 import { _ } from 'lodash'
 import Baby from 'babyparse'
 import drive from './drive'
-
-var key = require('../key.json');
+import key from '../key.json'
 
 class GuFile {
     constructor({metaData, lastUploadTest = null, lastUploadProd = null, domainPermissions = 'unknown'}) {
