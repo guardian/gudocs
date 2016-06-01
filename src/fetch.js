@@ -1,6 +1,6 @@
 import gu from 'koa-gu'
 import co from 'co'
-import { FileManager } from './docsfile'
+import FileManager from './fileManager'
 import program from 'commander'
 
 program
@@ -14,8 +14,7 @@ class Gudocs {
     }
 
     *run() {
-        var fileManager = new FileManager();
-        yield fileManager.update({fetchAll: !!program.all, fileId: program.id});
+        yield FileManager.update({fetchAll: !!program.all, fileId: program.id});
     }
 }
 

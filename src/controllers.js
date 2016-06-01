@@ -1,10 +1,12 @@
 import _ from 'lodash'
 import archieml from 'archieml'
 import moment from 'moment'
-import { FileManager } from './docsfile'
 import gu from 'koa-gu'
 import fs from 'fs'
 import path from 'path'
+
+import FileManager from './fileManager'
+
 var key = require('../key.json')
 var cssPath = path.resolve(__dirname, '../build/main.css');
 
@@ -24,11 +26,8 @@ exports.index = function *(){
 
 exports.publish = function *() {
     var id = this.request.body.id;
-    var guFiles = yield FileManager.getGuFiles([id]);
-    var guFile = guFiles[0];
-    if (guFile) {
-        yield guFile.update(yield FileManager.getTokens(), true);
-        yield FileManager.saveGuFiles([guFile])
+    if (id) {
+        yield FileManager.update({'fileId': id});
         this.redirect(this.headers.referer);
     } else {
         this.body = "File ID not found...???"
