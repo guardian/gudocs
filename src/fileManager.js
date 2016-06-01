@@ -68,9 +68,8 @@ export default class FileManager {
         }
 
         if (guFiles.length) {
-            var tokens = await drive.getTokens();
             for (var i = 0; i < guFiles.length; i++) {
-                await guFiles[i].update(tokens, publish).catch(err => {
+                await guFiles[i].update(publish).catch(err => {
                     gu.log.error('Failed to update', guFiles[i].id, guFiles[i].title)
                     gu.log.error(err);
                     gu.log.error(err.stack);

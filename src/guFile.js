@@ -1,20 +1,10 @@
 import gu from 'koa-gu'
-import rp from 'request-promise'
 import archieml from 'archieml'
 import { _ } from 'lodash'
 import Baby from 'babyparse'
 import drive from './drive'
 
 var key = require('../key.json');
-
-function driveRP(uri, tokens) {
-    return rp({
-        uri,
-        headers: {
-            'Authorization': tokens.token_type + ' ' + tokens.access_token
-        }
-    });
-}
 
 class GuFile {
     constructor({metaData, lastUploadTest = null, lastUploadProd = null, domainPermissions = 'unknown'}) {
@@ -65,10 +55,10 @@ class GuFile {
         }
     }
 
-    async update(tokens, publish) {
+    async update(publish) {
         gu.log.info(`Updating ${this.title} (${this.metaData.mimeType})`);
 
-        var body = await this.fetchFileJSON(tokens);
+        var body = await this.fetchFileJSON();
         this.domainPermissions = await this.fetchDomainPermissions();
 
         var p = this.uploadToS3(body, false);
@@ -95,22 +85,22 @@ class GuFile {
 }
 
 class DocsFile extends GuFile {
-    async fetchFileJSON(tokens) {
-      var rawBody = await driveRP(this.metaData.exportLinks['text/plain'], tokens);
+    async fetchFileJSON() {
+      var rawBody = await drive.request(this.metaData.exportLinks['text/plain']);
       return archieml.load(rawBody);
     }
 }
 
 class SheetsFile extends GuFile {
-    async fetchFileJSON(tokens) {
+    async fetchFileJSON() {
         var spreadsheet = await drive.fetchSpreadsheet(this.id);
-        var sheetJSONs = await Promise.all(spreadsheet.sheets.map(sheet => this.fetchSheetJSON(tokens, sheet)));
+        var sheetJSONs = await Promise.all(spreadsheet.sheets.map(sheet => this.fetchSheetJSON(sheet)));
         return {'sheets': Object.assign({}, ...sheetJSONs)};
     }
 
-    async fetchSheetJSON(tokens, sheet) {
+    async fetchSheetJSON(sheet) {
         var baseURL = this.metaData.exportLinks['text/csv'];
-        var csv = await driveRP(`${baseURL}&gid=${sheet.properties.sheetId}`, tokens);
+        var csv = await drive.request(`${baseURL}&gid=${sheet.properties.sheetId}`);
         var json = Baby.parse(csv, {'header': sheet.properties.title !== 'tableDataSheet'}).data;
         return {[sheet.properties.title]: json};
     }
