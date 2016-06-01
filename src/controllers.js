@@ -5,7 +5,7 @@ import gu from 'koa-gu'
 import fs from 'fs'
 import path from 'path'
 
-import FileManager from './fileManager'
+import fileManager from './fileManager'
 
 var key = require('../key.json')
 var cssPath = path.resolve(__dirname, '../build/main.css');
@@ -17,8 +17,8 @@ exports.index = function *(){
 
     this.body = gu.tmpl('./templates/index.html', {
         page, size, dev,
-        docs2archieml: yield FileManager.getStateDb(),
-        files: yield FileManager.getAllGuFiles(page * size, (page + 1) * size - 1),
+        docs2archieml: yield fileManager.getStateDb(),
+        files: yield fileManager.getAllGuFiles(page * size, (page + 1) * size - 1),
         email: key.client_email,
         css: fs.readFileSync(cssPath, 'utf8')
     });
@@ -27,7 +27,7 @@ exports.index = function *(){
 exports.publish = function *() {
     var id = this.request.body.id;
     if (id) {
-        yield FileManager.update({'fileId': id, 'publish': true});
+        yield fileManager.update({'fileId': id, 'publish': true});
         this.redirect(this.headers.referer);
     } else {
         this.body = "File ID not found...???"

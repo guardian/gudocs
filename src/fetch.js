@@ -1,6 +1,6 @@
 import gu from 'koa-gu'
 import co from 'co'
-import FileManager from './fileManager'
+import fileManager from './fileManager'
 import program from 'commander'
 
 program
@@ -10,7 +10,7 @@ program
 
 function *fetch() {
     gu.init({www:false});
-    yield FileManager.update({fetchAll: !!program.all, fileId: program.id});
+    yield fileManager.update({fetchAll: !!program.all, fileId: program.id});
 }
 
 co(fetch)
