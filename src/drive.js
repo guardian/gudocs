@@ -1,9 +1,11 @@
-import { jwtClient as auth } from './auth.js'
 import denodeify from 'denodeify'
 import google from 'googleapis'
 
 var drive = google.drive('v2');
 var sheets = google.sheets('v4');
+
+var key = require('../key.json');
+var auth = new google.auth.JWT(key.client_email, null, key.private_key, ['https://www.googleapis.com/auth/drive']);
 
 const jwtAuthorize = denodeify(auth.authorize.bind(auth));
 const listPermissions = denodeify(drive.permissions.list);
