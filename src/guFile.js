@@ -7,6 +7,15 @@ import drive from './drive'
 
 var key = require('../key.json');
 
+function driveRP(uri, tokens) {
+    return rp({
+        uri,
+        headers: {
+            'Authorization': tokens.token_type + ' ' + tokens.access_token
+        }
+    });
+}
+
 class GuFile {
     constructor({metaData, lastUploadTest = null, lastUploadProd = null, domainPermissions = 'unknown'}) {
         this.metaData = metaData;
@@ -87,12 +96,7 @@ class GuFile {
 
 class DocsFile extends GuFile {
     async fetchFileJSON(tokens) {
-      var rawBody = await rp({
-          uri: this.metaData.exportLinks['text/plain'],
-          headers: {
-              'Authorization': tokens.token_type + ' ' + tokens.access_token
-          }
-      });
+      var rawBody = await driveRP(this.metaData.exportLinks['text/plain'], tokens);
       return archieml.load(rawBody);
     }
 }
@@ -105,12 +109,7 @@ class SheetsFile extends GuFile {
     }
 
     async getSheetCsvGid(tokens) {
-        var embedHTML = await rp({
-            uri: this.metaData.embedLink,
-            headers: {
-                'Authorization': tokens.token_type + ' ' + tokens.access_token
-            }
-        });
+        var embedHTML = await driveRP(this.metaData.embedLink, tokens);
         var gidRegex = /gid=(\d+)/g,
             nameRegex = /(name: ")([^"]*)/g;
 
@@ -125,17 +124,8 @@ class SheetsFile extends GuFile {
     }
 
     async getSheetAsJson(gid, tokens) {
-        var baseUrl = this.metaData.exportLinks['text/csv'],
-            json,
-            csv = await rp({
-                uri: `${baseUrl}&gid=${gid}`,
-                headers: {
-                    'Authorization': tokens.token_type + ' ' + tokens.access_token
-                }
-            });
-
-        json = Baby.parse(csv, { header: this.gidNames[gid] !== "tableDataSheet" });
-
+        var csv = await driveRP(`${this.metaData.exportLinks['text/csv']}&gid=${gid}`, tokens);
+        var json = Baby.parse(csv, { header: this.gidNames[gid] !== "tableDataSheet" });
         return json.data;
     }
 }
