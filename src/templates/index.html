@@ -66,7 +66,7 @@
 					</td>
 					{% if dev %}
 						<td>
-							<form method="POST" action='{{config.base_url}}/publish?force=1'>
+							<form method="POST" action='{{config.base_url}}/publish?test=true'>
 								<input type="hidden" name="id" value="{{ f.id }}">
 								<button class="btn btn--blue">force</button>
 							</form>
