@@ -51,7 +51,7 @@ class GuFile {
 
     async fetchDomainPermissions() {
         if (gu.config.requireDomainPermissions) {
-            var perms = await drive.listPermissions(this.id);
+            var perms = await drive.fetchFilePermissions(this.id);
             var domainPermission = perms.items.find(i => i.name === gu.config.requireDomainPermissions)
             if (domainPermission) {
                 return domainPermission.role;

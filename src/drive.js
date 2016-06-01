@@ -4,8 +4,9 @@ import google from 'googleapis'
 
 var drive = google.drive('v2');
 
-const listPermissions = denodeify(drive.permissions.list);
 const jwtAuthorize = denodeify(jwtClient.authorize.bind(jwtClient));
+const listPermissions = denodeify(drive.permissions.list);
+const listChanges = denodeify(drive.changes.list);
 
 export default {
     fetchAllChanges() {
@@ -29,20 +30,15 @@ export default {
     },
 
     fetchRecentChanges(startChangeId) {
-        return new Promise(resolve => {
-            var opts = {auth:jwtClient, startChangeId: startChangeId, maxResults: 25};
-            drive.changes.list(opts, (err, resp) => {
-                if (err) { console.error(err); process.exit(1); }
-                resolve(resp);
-            });
-        })
+        return listChanges({auth: jwtClient, maxResults: 25, startChangeId});
     },
 
+    fetchFilePermissions(fileId) {
+        return listPermissions({auth: jwtClient, fileId});
+    },
+
+    // TODO: deprecate in favour of googleapis
     getTokens() {
         return jwtAuthorize();
-    },
-
-    listPermissions(fileId) {
-        return listPermissions({auth: jwtClient, fileId});
     }
 }
