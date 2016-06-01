@@ -191,8 +191,10 @@ export class GuFile {
 
         var body = await this.fetchFileJSON(tokens);
         this.domainPermissions = await this.fetchDomainPermissions();
-        this.uploadToS3(body, false);
-        if (prod) this.uploadToS3(body, true);
+
+        var p = this.uploadToS3(body, false);
+        if (prod) return p.then(() => this.uploadToS3(body, true));
+        return p;
     }
 
     uploadToS3(body, prod) {
