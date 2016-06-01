@@ -103,30 +103,16 @@ class DocsFile extends GuFile {
 
 class SheetsFile extends GuFile {
     async fetchFileJSON(tokens) {
-        var sheetUrls = await this.getSheetCsvGid(tokens);
-        var sheetJsons = await Promise.all(sheetUrls.map(url => this.getSheetAsJson(url, tokens)))
-        return { sheets: _.zipObject(this.sheetNames, sheetJsons) };
+        var spreadsheet = await drive.fetchSpreadsheet(this.id);
+        var sheetJSONs = await Promise.all(spreadsheet.sheets.map(sheet => this.fetchSheetJSON(tokens, sheet)));
+        return {'sheets': Object.assign({}, ...sheetJSONs)};
     }
 
-    async getSheetCsvGid(tokens) {
-        var embedHTML = await driveRP(this.metaData.embedLink, tokens);
-        var gidRegex = /gid=(\d+)/g,
-            nameRegex = /(name: ")([^"]*)/g;
-
-        var gidMatch, gids = [], nameMatch, sheetNames = [];
-        while (gidMatch = gidRegex.exec(embedHTML)) gids.push(gidMatch[1]);
-        while (nameMatch = nameRegex.exec(embedHTML)) sheetNames.push(nameMatch[2]);
-
-        this.gidNames = _.object(gids, sheetNames);
-        this.sheetNames = sheetNames;
-
-        return gids;
-    }
-
-    async getSheetAsJson(gid, tokens) {
-        var csv = await driveRP(`${this.metaData.exportLinks['text/csv']}&gid=${gid}`, tokens);
-        var json = Baby.parse(csv, { header: this.gidNames[gid] !== "tableDataSheet" });
-        return json.data;
+    async fetchSheetJSON(tokens, sheet) {
+        var baseURL = this.metaData.exportLinks['text/csv'];
+        var csv = await driveRP(`${baseURL}&gid=${sheet.properties.sheetId}`, tokens);
+        var json = Baby.parse(csv, {'header': sheet.properties.title !== 'tableDataSheet'}).data;
+        return {[sheet.properties.title]: json};
     }
 }
 

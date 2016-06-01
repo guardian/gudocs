@@ -10,6 +10,7 @@ var auth = new google.auth.JWT(key.client_email, null, key.private_key, ['https:
 const jwtAuthorize = denodeify(auth.authorize.bind(auth));
 const listPermissions = denodeify(drive.permissions.list);
 const listChanges = denodeify(drive.changes.list);
+const getSpreadsheet = denodeify(sheets.spreadsheets.get);
 
 async function fetchAllChanges(pageToken = undefined) {
     var options = Object.assign({auth, 'maxResults': 1000}, pageToken ? {pageToken} : {});
@@ -37,6 +38,10 @@ export default {
 
     fetchFilePermissions(fileId) {
         return listPermissions({auth, fileId});
+    },
+
+    fetchSpreadsheet(spreadsheetId) {
+        return getSpreadsheet({auth, spreadsheetId});
     },
 
     // TODO: deprecate in favour of googleapis
