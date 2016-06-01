@@ -36,11 +36,10 @@ var request = (function() {
     var token;
 
     return async function req(uri) {
-        gu.log.info('Google request', uri);
+        gu.log.info('Requesting', uri);
         if (!token) token = await authorize();
 
         try {
-            console.log(token);
             return await rp({uri, 'headers': {'Authorization': `${token.token_type} ${token.access_token}`}});
         } catch (err) {
             if (err.statusCode === 401) {
