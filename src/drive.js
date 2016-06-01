@@ -8,33 +8,32 @@ const jwtAuthorize = denodeify(jwtClient.authorize.bind(jwtClient));
 const listPermissions = denodeify(drive.permissions.list);
 const listChanges = denodeify(drive.changes.list);
 
+async function fetchAllChanges(pageToken = undefined) {
+    var options = Object.assign({'auth': jwtClient, 'maxResults': 1000}, pageToken ? {pageToken} : {});
+    var page = await listChanges(options);
+
+    var largestChangeId, items;
+    if (page.nextPageToken) {
+        let nextPage = await fetchAllChanges(page.nextPageToken);
+        largestChangeId = Math.max(page.largestChangeId, nextPage.largestChangeId);
+        items = page.items.concat(nextPage.items);
+    } else {
+        largestChangeId = page.largestChangeId;
+        items = page.items;
+    }
+
+    return {items, largestChangeId};
+}
+
 export default {
-    fetchAllChanges() {
-        let requestSize = 1000;
-        return new Promise(resolve => {
-            var retrievePageOfChanges = function(requestOpts, items, largestChangeId) {
-                drive.changes.list(requestOpts, (err, resp) => {
-                    if (err) { console.error(err); process.exit(1); }
-                    items = items.concat(resp.items);
-                    largestChangeId = resp.largestChangeId ? Math.max(resp.largestChangeId, largestChangeId) : largestChangeId;
-                    var nextPageToken = resp.nextPageToken;
-                    if (nextPageToken) {
-                        retrievePageOfChanges(
-                            {auth: jwtClient, maxResults: requestSize, pageToken: nextPageToken},
-                            items, largestChangeId);
-                    } else resolve({items: items, largestChangeId: largestChangeId});
-                })
-            }
-            retrievePageOfChanges({auth:jwtClient, maxResults: requestSize}, [], 0);
-        });
-    },
+    fetchAllChanges,
 
     fetchRecentChanges(startChangeId) {
-        return listChanges({auth: jwtClient, maxResults: 25, startChangeId});
+        return listChanges({'auth': jwtClient, 'maxResults': 25, startChangeId});
     },
 
     fetchFilePermissions(fileId) {
-        return listPermissions({auth: jwtClient, fileId});
+        return listPermissions({'auth': jwtClient, fileId});
     },
 
     // TODO: deprecate in favour of googleapis
