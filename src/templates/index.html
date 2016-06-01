@@ -55,7 +55,7 @@
 						{% endif %}
 					</td>
 					<td>
-						{% if !f.isProdCurrent() %}
+						{% if !f.isProdCurrent() or dev %}
 							<form method="POST" action='{{config.base_url}}/publish'>
 								<input type="hidden" name="id" value="{{ f.id }}">
 								<button class="btn btn--blue">publish</button>
@@ -68,7 +68,7 @@
 						<td>
 							<form method="POST" action='{{config.base_url}}/publish?test=true'>
 								<input type="hidden" name="id" value="{{ f.id }}">
-								<button class="btn btn--blue">force</button>
+								<button class="btn btn--blue">force test</button>
 							</form>
 						</td>
 					{% endif %}
