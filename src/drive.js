@@ -3,6 +3,7 @@ import denodeify from 'denodeify'
 import google from 'googleapis'
 
 var drive = google.drive('v2');
+var sheets = google.sheets('v4');
 
 const jwtAuthorize = denodeify(jwtClient.authorize.bind(jwtClient));
 const listPermissions = denodeify(drive.permissions.list);
