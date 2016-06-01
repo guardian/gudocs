@@ -1,8 +1,6 @@
 import gu from 'koa-gu'
 import rp from 'request-promise'
 import archieml from 'archieml'
-import denodeify from 'denodeify'
-import { Converter } from 'csvtojson'
 import { _ } from 'lodash'
 import Baby from 'babyparse'
 import drive from './drive'
@@ -135,8 +133,6 @@ class SheetsFile extends GuFile {
                     'Authorization': tokens.token_type + ' ' + tokens.access_token
                 }
             });
-        var converter = new Converter({constructResult:true});
-        var csvToJson = denodeify(converter.fromString.bind(converter));
 
         json = Baby.parse(csv, { header: this.gidNames[gid] !== "tableDataSheet" });
 
