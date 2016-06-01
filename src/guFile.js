@@ -2,13 +2,11 @@ import gu from 'koa-gu'
 import rp from 'request-promise'
 import archieml from 'archieml'
 import denodeify from 'denodeify'
-import google from 'googleapis'
 import { Converter } from 'csvtojson'
-import { jwtClient } from './auth.js'
 import { _ } from 'lodash'
 import Baby from 'babyparse'
+import drive from './drive'
 
-var drive = google.drive('v2')
 var key = require('../key.json');
 
 class GuFile {
@@ -46,14 +44,18 @@ class GuFile {
 
     async fetchDomainPermissions() {
         if (gu.config.requireDomainPermissions) {
-            var listPermissions = denodeify(drive.permissions.list);
-            var perms = await listPermissions({auth: jwtClient, fileId: this.id});
+            var perms = await drive.listPermissions(this.id);
             var domainPermission = perms.items.find(i => i.name === gu.config.requireDomainPermissions)
-            if (domainPermission) return domainPermission.role;
-            else if(perms.items.find(i => i.emailAddress === key.client_email)) {
+            if (domainPermission) {
+                return domainPermission.role;
+            } else if(perms.items.find(i => i.emailAddress === key.client_email)) {
                 return 'none';
-            } else return 'unknown';
-        } else return 'disabled';
+            } else {
+                return 'unknown';
+            }
+        } else {
+            return 'disabled';
+        }
     }
 
     async update(tokens, publish) {

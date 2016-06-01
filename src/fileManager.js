@@ -1,12 +1,7 @@
 import gu from 'koa-gu'
-import denodeify from 'denodeify'
-import google from 'googleapis'
-import { jwtClient } from './auth.js'
 import { _ } from 'lodash'
-
 import { deserialize } from './guFile'
-
-var drive = google.drive('v2')
+import drive from './drive'
 
 export default class FileManager {
     static async getStateDb() {
@@ -41,41 +36,6 @@ export default class FileManager {
         await gu.db.zadd.call(gu.db, indexArgs);
     }
 
-    static async getTokens() {
-        var promiseFn = denodeify(jwtClient.authorize.bind(jwtClient))
-        return await promiseFn();
-    }
-
-    static async fetchRecentChanges(startChangeId) {
-        return new Promise(resolve => {
-            var opts = {auth:jwtClient, startChangeId: startChangeId, maxResults: 25};
-            drive.changes.list(opts, (err, resp) => {
-                if (err) { console.error(err); process.exit(1); }
-                resolve(resp);
-            });
-        })
-    }
-
-    static async fetchAllChanges() {
-        let requestSize = 1000;
-        return new Promise(resolve => {
-            var retrievePageOfChanges = function(requestOpts, items, largestChangeId) {
-                drive.changes.list(requestOpts, (err, resp) => {
-                    if (err) { console.error(err); process.exit(1); }
-                    items = items.concat(resp.items);
-                    largestChangeId = resp.largestChangeId ? Math.max(resp.largestChangeId, largestChangeId) : largestChangeId;
-                    var nextPageToken = resp.nextPageToken;
-                    if (nextPageToken) {
-                        retrievePageOfChanges(
-                            {auth: jwtClient, maxResults: requestSize, pageToken: nextPageToken},
-                            items, largestChangeId);
-                    } else resolve({items: items, largestChangeId: largestChangeId});
-                })
-            }
-            retrievePageOfChanges({auth:jwtClient, maxResults: requestSize}, [], 0);
-        });
-    }
-
     static async update({fetchAll = false, fileId = '', publish = false}) {
         var guFiles = [];
         if (fileId) {
@@ -85,11 +45,11 @@ export default class FileManager {
             var changeList;
 
             if (fetchAll) {
-                changeList = await FileManager.fetchAllChanges();
+                changeList = await drive.fetchAllChanges();
                 gu.log.info(`${changeList.items.length} changes. Largest ChangeId: ${changeList.largestChangeId}`)
             } else {
                 var startChangeId = 1 + Number(db.lastChangeId);
-                changeList = await FileManager.fetchRecentChanges(startChangeId);
+                changeList = await drive.fetchRecentChanges(startChangeId);
                 gu.log.info(`${changeList.items.length} new changes since ChangeId ${startChangeId}. Largest ChangeId: ${changeList.largestChangeId}`)
             }
 
@@ -108,7 +68,7 @@ export default class FileManager {
         }
 
         if (guFiles.length) {
-            var tokens = await FileManager.getTokens();
+            var tokens = await drive.getTokens();
             for (var i = 0; i < guFiles.length; i++) {
                 await guFiles[i].update(tokens, publish).catch(err => {
                     gu.log.error('Failed to update', guFiles[i].id, guFiles[i].title)
