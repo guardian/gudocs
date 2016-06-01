@@ -40,7 +40,7 @@ export default {
         await gu.db.zadd.call(gu.db, indexArgs);
     },
 
-    async update({fetchAll = false, fileId = '', publish = false}) {
+    async update({fetchAll = false, fileId = '', prod = false}) {
         var guFiles;
         if (fileId) {
             guFiles = await this.getGuFiles([fileId]);
@@ -71,7 +71,7 @@ export default {
         }
 
         for (var i = 0; i < guFiles.length; i++) {
-            await guFiles[i].update(publish).catch(err => {
+            await guFiles[i].update(prod).catch(err => {
                 gu.log.error('Failed to update', guFiles[i].id, guFiles[i].title)
                 gu.log.error(err);
                 gu.log.error(err.stack);
