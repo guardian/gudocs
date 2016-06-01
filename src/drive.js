@@ -1,3 +1,4 @@
+import gu from 'koa-gu'
 import denodeify from 'denodeify'
 import google from 'googleapis'
 import rp from 'request-promise'
@@ -33,13 +34,23 @@ async function fetchAllChanges(pageToken = undefined) {
 // TODO: deprecate in favour of googleapis
 var request = (function() {
     var token;
-    return async function (uri) {
-        if (!token) {
-            token = await authorize();
-            // refresh every 30 mins
-            setTimeout(() => token = undefined, 30 * 60 * 1000);
+
+    return async function req(uri) {
+        gu.log.info('Google request', uri);
+        if (!token) token = await authorize();
+
+        try {
+            console.log(token);
+            return await rp({uri, 'headers': {'Authorization': `${token.token_type} ${token.access_token}`}});
+        } catch (err) {
+            if (err.statusCode === 401) {
+                gu.log.info('Authorization token expired');
+                token = undefined;
+                return await req(uri);
+            }
+
+            throw err;
         }
-        return rp({uri, 'headers': {'Authorization': `${token.token_type} ${token.access_token}`}});
     };
 })();
 
