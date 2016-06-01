@@ -76,7 +76,7 @@ export default class FileManager {
         });
     }
 
-    static async update({fetchAll = false, fileId = ''}) {
+    static async update({fetchAll = false, fileId = '', publish = false}) {
         var guFiles = [];
         if (fileId) {
             guFiles = await FileManager.getGuFiles([fileId]);
@@ -110,7 +110,7 @@ export default class FileManager {
         if (guFiles.length) {
             var tokens = await FileManager.getTokens();
             for (var i = 0; i < guFiles.length; i++) {
-                await guFiles[i].update(tokens).catch(err => {
+                await guFiles[i].update(tokens, publish).catch(err => {
                     gu.log.error('Failed to update', guFiles[i].id, guFiles[i].title)
                     gu.log.error(err);
                     gu.log.error(err.stack);

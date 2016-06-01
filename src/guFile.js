@@ -56,14 +56,14 @@ class GuFile {
         } else return 'disabled';
     }
 
-    async update(tokens, prod=false) {
+    async update(tokens, publish) {
         gu.log.info(`Updating ${this.title} (${this.metaData.mimeType})`);
 
         var body = await this.fetchFileJSON(tokens);
         this.domainPermissions = await this.fetchDomainPermissions();
 
         var p = this.uploadToS3(body, false);
-        if (prod) return p.then(() => this.uploadToS3(body, true));
+        if (publish) return p.then(() => this.uploadToS3(body, true));
         return p;
     }
 
@@ -148,7 +148,6 @@ const types = {
 };
 
 export function deserialize(json) {
-    console.log(types);
     var FileClass = types[json.metaData.mimeType];
     if (!FileClass) gu.log.warn(`mimeType ${json.metaData.mimeType} not recognized`);
     else return new FileClass(json);
