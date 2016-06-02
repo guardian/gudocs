@@ -35,17 +35,22 @@ async function fetchAllChanges(pageToken = undefined) {
 var request = (function() {
     var token;
 
-    return async function req(uri) {
+    return async function req(uri, opts={}) {
         gu.log.info('Requesting', uri);
         if (!token) token = await authorize();
 
+        var rpOpts = Object.assign({}, opts, {
+            uri,
+            'headers': {'Authorization': `${token.token_type} ${token.access_token}`}
+        });
+
         try {
-            return await rp({uri, 'headers': {'Authorization': `${token.token_type} ${token.access_token}`}});
+            return await rp(rpOpts);
         } catch (err) {
             if (err.statusCode === 401) {
                 gu.log.info('Authorization token expired');
-                token = undefined;
-                return await req(uri);
+                token = await authorize();
+                return await req(uri, opts);
             }
 
             throw err;
