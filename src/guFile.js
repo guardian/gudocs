@@ -1,9 +1,10 @@
 import gu from 'koa-gu'
-import archieml from 'archieml'
 import { _ } from 'lodash'
-import Baby from 'babyparse'
 import drive from './drive'
 import key from '../key.json'
+import archieml from 'archieml'
+import Baby from 'babyparse'
+import XLSX from 'xlsx'
 
 class GuFile {
     constructor({metaData, lastUploadTest = null, lastUploadProd = null, domainPermissions = 'unknown'}) {
@@ -92,12 +93,29 @@ class DocsFile extends GuFile {
 
 class SheetsFile extends GuFile {
     async fetchFileJSON() {
-        var spreadsheet = await drive.fetchSpreadsheet(this.id);
-        var sheetJSONs = await Promise.all(spreadsheet.sheets.map(sheet => this.fetchSheetJSON(sheet)));
+        // TODO: deprecate old parser
+        if (false) {
+            return this.old_fetchFileJSON();
+        }
+
+        var exportURL = this.metaData.exportLinks['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+        var xlsx = await drive.request(exportURL, {'encoding': null, 'gzip': true});
+        var spreadsheet = XLSX.read(xlsx);
+        var sheetJSONs = spreadsheet.SheetNames.map(sheetName => {
+            var csv = XLSX.utils.sheet_to_csv(spreadsheet.Sheets[sheetName]).replace(/\n(,+\n)+$/, '');
+            var json = Baby.parse(csv, {'header': sheetName !== 'tableDataSheet'}).data;
+            return {[sheetName]: json};
+        });
         return {'sheets': Object.assign({}, ...sheetJSONs)};
     }
 
-    async fetchSheetJSON(sheet) {
+    async old_fetchFileJSON() {
+        var spreadsheet = await drive.fetchSpreadsheet(this.id);
+        var sheetJSONs = await Promise.all(spreadsheet.sheets.map(sheet => this.old_fetchSheetJSON(sheet)));
+        return {'sheets': Object.assign({}, ...sheetJSONs)};
+    }
+
+    async old_fetchSheetJSON(sheet) {
         var baseURL = this.metaData.exportLinks['text/csv'];
         var csv = await drive.request(`${baseURL}&gid=${sheet.properties.sheetId}`);
         var json = Baby.parse(csv, {'header': sheet.properties.title !== 'tableDataSheet'}).data;
