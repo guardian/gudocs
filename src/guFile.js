@@ -90,10 +90,18 @@ class DocsFile extends GuFile {
     }
 }
 
+// Some magic numbers that seem to make Google happy
+const delayInitial = 500;
+const delayExp = 1.7;
+const delay = n => new Promise(resolve => setTimeout(resolve, delayInitial * Math.pow(delayExp, n)));
+
 class SheetsFile extends GuFile {
     async fetchFileJSON() {
         var spreadsheet = await drive.fetchSpreadsheet(this.id);
-        var sheetJSONs = await Promise.all(spreadsheet.sheets.map(sheet => this.fetchSheetJSON(sheet)));
+        var sheetJSONs = await Promise.all(spreadsheet.sheets.map((sheet, sheetNo) => {
+            return delay(sheetNo).then(() => this.fetchSheetJSON(sheet));
+        }));
+
         return {'sheets': Object.assign({}, ...sheetJSONs)};
     }
 
