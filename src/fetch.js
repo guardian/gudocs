@@ -5,12 +5,12 @@ import program from 'commander'
 
 program
   .option('-a, --all', 'fetch all changes', false)
-  .option('--id [id]', 'fetch specific id')
+  .option('--id [id]', 'fetch specific id', s => s.split(','))
   .parse(process.argv);
 
 function *fetch() {
     gu.init({www:false});
-    yield fileManager.update({fetchAll: !!program.all, fileId: program.id});
+    yield fileManager.update({fetchAll: !!program.all, fileIds: program.id});
 }
 
 co(fetch)

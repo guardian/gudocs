@@ -40,10 +40,10 @@ export default {
         await gu.db.zadd.call(gu.db, indexArgs);
     },
 
-    async update({fetchAll = false, fileId = '', prod = false}) {
+    async update({fetchAll = false, fileIds = [], prod = false}) {
         var guFiles;
-        if (fileId) {
-            guFiles = await this.getGuFiles([fileId]);
+        if (fileIds.length > 0) {
+            guFiles = await this.getGuFiles(fileIds);
         } else {
             let db = await this.getStateDb();
             let changeList = fetchAll ?
