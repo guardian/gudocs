@@ -70,12 +70,20 @@ export default {
                 .filter(guFile => !!guFile); // filter any broken/unrecognized
         }
 
-        for (var i = 0; i < guFiles.length; i++) {
-            await guFiles[i].update(prod).catch(err => {
-                gu.log.error('Failed to update', guFiles[i].id, guFiles[i].title)
-                gu.log.error(err);
-                gu.log.error(err.stack);
-            });
+        var promises = guFiles.map(guFile => {
+            return guFile.update(prod)
+                .then(() => undefined)
+                .catch(err => {
+                    gu.log.error('Failed to update', guFile.id, guFile.title)
+                    gu.log.error(err);
+                    return guFile;
+                });
+        });
+
+        var fails = (await Promise.all(promises)).filter(f => !!f);
+        if (fails.length > 0) {
+            gu.log.error('The following updates failed');
+            fails.forEach(fail => gu.log.error(`\t${fail.id} ${fail.title}`))
         }
 
         await this.saveGuFiles(guFiles);

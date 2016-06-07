@@ -4,6 +4,10 @@ import { _ } from 'lodash'
 import Baby from 'babyparse'
 import drive from './drive'
 import key from '../key.json'
+import { delay } from './util'
+import createLimiter from './limiter'
+
+var s3limiter = createLimiter('s3', 50);
 
 class GuFile {
     constructor({metaData, lastUploadTest = null, lastUploadProd = null, domainPermissions = 'unknown'}) {
@@ -55,7 +59,7 @@ class GuFile {
     }
 
     async update(publish) {
-        gu.log.info(`Updating ${this.title} (${this.metaData.mimeType})`);
+        gu.log.info(`Updating ${this.id} ${this.title} (${this.metaData.mimeType})`);
 
         var body = await this.fetchFileJSON();
         this.domainPermissions = await this.fetchDomainPermissions();
@@ -75,7 +79,7 @@ class GuFile {
             ContentType: 'application/json',
             CacheControl: prod ? 'max-age=30' : 'max-age=5'
         }
-        var promise = gu.s3.putObject(params);
+        var promise = s3limiter.normal(gu.s3.putObject, params);
         promise.then(_ =>
             this[prod ? 'lastUploadProd' : 'lastUploadTest'] = this.metaData.modifiedDate);
         promise.then(_ => gu.log.info(`Uploaded ${this.title} to ${uploadPath}`))
@@ -90,11 +94,27 @@ class DocsFile extends GuFile {
     }
 }
 
+// Some magic numbers that seem to make Google happy
+const delayInitial = 500;
+const delayExp = 1.6;
+const delayCutoff = 8; // After this many sheets, just wait delayMax
+const delayMax = 20000;
+
 class SheetsFile extends GuFile {
     async fetchFileJSON() {
         var spreadsheet = await drive.fetchSpreadsheet(this.id);
-        var sheetJSONs = await Promise.all(spreadsheet.sheets.map(sheet => this.fetchSheetJSON(sheet)));
-        return {'sheets': Object.assign({}, ...sheetJSONs)};
+        var ms = 0;
+        var delays = spreadsheet.sheets.map((sheet, n) => {
+            ms += n > delayCutoff ? delayMax : delayInitial * Math.pow(delayExp, n);
+            return delay(ms, () => this.fetchSheetJSON(sheet));
+        });
+        try {
+            var sheetJSONs = await Promise.all(delays.map(d => d.promise));
+            return {'sheets': Object.assign({}, ...sheetJSONs)};
+        } catch (err) {
+            delays.forEach(d => d.cancel());
+            throw err;
+        }
     }
 
     async fetchSheetJSON(sheet) {
