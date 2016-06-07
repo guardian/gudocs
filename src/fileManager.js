@@ -82,8 +82,8 @@ export default {
 
         var fails = (await Promise.all(promises)).filter(f => !!f);
         if (fails.length > 0) {
-            console.error('The following updates failed');
-            fails.forEach(fail => console.error(`\t${fail.id} ${fail.title}`))
+            gu.log.error('The following updates failed');
+            fails.forEach(fail => gu.log.error(`\t${fail.id} ${fail.title}`))
         }
 
         await this.saveGuFiles(guFiles);
