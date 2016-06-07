@@ -5,9 +5,9 @@ import Baby from 'babyparse'
 import drive from './drive'
 import key from '../key.json'
 import { delay } from './util'
-import Bottleneck from 'bottleneck'
+import createLimiter from './limiter'
 
-var s3limiter = new Bottleneck(1, 100);
+var s3limiter = createLimiter('s3', 100);
 
 class GuFile {
     constructor({metaData, lastUploadTest = null, lastUploadProd = null, domainPermissions = 'unknown'}) {
@@ -79,7 +79,7 @@ class GuFile {
             ContentType: 'application/json',
             CacheControl: prod ? 'max-age=30' : 'max-age=5'
         }
-        var promise = s3limiter.schedule(gu.s3.putObject, params);
+        var promise = s3limiter(gu.s3.putObject, params);
         promise.then(_ =>
             this[prod ? 'lastUploadProd' : 'lastUploadTest'] = this.metaData.modifiedDate);
         promise.then(_ => gu.log.info(`Uploaded ${this.title} to ${uploadPath}`))

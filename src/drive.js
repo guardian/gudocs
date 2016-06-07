@@ -3,14 +3,14 @@ import denodeify from 'denodeify'
 import google from 'googleapis'
 import rp from 'request-promise'
 import key from '../key.json'
-import Bottleneck from 'bottleneck'
+import createLimiter from './limiter'
 
 var drive = google.drive('v2');
 var sheets = google.sheets('v4');
 
 var auth = new google.auth.JWT(key.client_email, null, key.private_key, ['https://www.googleapis.com/auth/drive']);
 
-var limiter = new Bottleneck(1, 100);
+var limiter = createLimiter('drive', 100);
 
 const authorize = denodeify(auth.authorize.bind(auth));
 const listPermissions = denodeify(drive.permissions.list);
@@ -19,7 +19,7 @@ const getSpreadsheet = denodeify(sheets.spreadsheets.get);
 
 async function fetchAllChanges(pageToken = undefined) {
     var options = Object.assign({auth, 'maxResults': 1000}, pageToken ? {pageToken} : {});
-    var page = await limiter.schedule(listChanges, options);
+    var page = await limiter(listChanges, options);
 
     var largestChangeId, items;
     if (page.nextPageToken) {
@@ -37,7 +37,7 @@ async function fetchAllChanges(pageToken = undefined) {
 // TODO: deprecate in favour of googleapis
 var request = (function() {
     var token;
-    var rlimiter = new Bottleneck(1, 400);
+    var rlimiter = createLimiter('request', 400);
 
     async function _req(uri) {
         gu.log.info('Requesting', uri);
@@ -57,7 +57,7 @@ var request = (function() {
     }
 
     return function req(uri) {
-        return rlimiter.schedule(_req, uri);
+        return rlimiter(_req, uri);
     };
 })();
 
@@ -67,14 +67,14 @@ export default {
     fetchAllChanges,
 
     fetchRecentChanges(startChangeId) {
-        return limiter.schedule(listChanges, {auth, startChangeId, 'maxResults': 25});
+        return limiter(listChanges, {auth, startChangeId, 'maxResults': 25});
     },
 
     fetchFilePermissions(fileId) {
-        return limiter.schedule(listPermissions, {auth, fileId});
+        return limiter(listPermissions, {auth, fileId});
     },
 
     fetchSpreadsheet(spreadsheetId) {
-        return limiter.schedule(getSpreadsheet, {auth, spreadsheetId});
+        return limiter(getSpreadsheet, {auth, spreadsheetId});
     }
 }
