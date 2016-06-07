@@ -28,7 +28,7 @@ exports.publish = function *() {
     var fileId = this.request.body.id;
     var prod = !this.request.query.test;
     if (fileId) {
-        yield fileManager.update({fileId, prod});
+        yield fileManager.update({'fileIds': [fileId], prod});
         this.redirect(this.headers.referer);
     } else {
         this.body = "File ID not found...???"
