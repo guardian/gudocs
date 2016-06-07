@@ -3,11 +3,14 @@ import denodeify from 'denodeify'
 import google from 'googleapis'
 import rp from 'request-promise'
 import key from '../key.json'
+import Bottleneck from 'bottleneck'
 
 var drive = google.drive('v2');
 var sheets = google.sheets('v4');
 
 var auth = new google.auth.JWT(key.client_email, null, key.private_key, ['https://www.googleapis.com/auth/drive']);
+
+var limiter = new Bottleneck(1, 100);
 
 const authorize = denodeify(auth.authorize.bind(auth));
 const listPermissions = denodeify(drive.permissions.list);
@@ -16,7 +19,7 @@ const getSpreadsheet = denodeify(sheets.spreadsheets.get);
 
 async function fetchAllChanges(pageToken = undefined) {
     var options = Object.assign({auth, 'maxResults': 1000}, pageToken ? {pageToken} : {});
-    var page = await listChanges(options);
+    var page = await limiter.schedule(listChanges, options);
 
     var largestChangeId, items;
     if (page.nextPageToken) {
@@ -34,8 +37,9 @@ async function fetchAllChanges(pageToken = undefined) {
 // TODO: deprecate in favour of googleapis
 var request = (function() {
     var token;
+    var rlimiter = new Bottleneck(1, 400);
 
-    return async function req(uri) {
+    async function _req(uri) {
         gu.log.info('Requesting', uri);
         if (!token) token = await authorize();
 
@@ -50,6 +54,10 @@ var request = (function() {
 
             throw err;
         }
+    }
+
+    return function req(uri) {
+        return rlimiter.schedule(_req, uri);
     };
 })();
 
@@ -59,14 +67,14 @@ export default {
     fetchAllChanges,
 
     fetchRecentChanges(startChangeId) {
-        return listChanges({auth, startChangeId, 'maxResults': 25});
+        return limiter.schedule(listChanges, {auth, startChangeId, 'maxResults': 25});
     },
 
     fetchFilePermissions(fileId) {
-        return listPermissions({auth, fileId});
+        return limiter.schedule(listPermissions, {auth, fileId});
     },
 
     fetchSpreadsheet(spreadsheetId) {
-        return getSpreadsheet({auth, spreadsheetId});
+        return limiter.schedule(getSpreadsheet, {auth, spreadsheetId});
     }
 }
