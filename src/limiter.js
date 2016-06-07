@@ -10,7 +10,7 @@ function logLimiters() {
     gu.log.info('Limiters - ' + statuses.join(', '));
 
     var queueSizes = limiters.map(l => l.limiter.nbQueued());
-    timeout = _.sum(queueSizes) > 0 ? setTimeout(logLimiters, 20000) : undefined;
+    timeout = _.sum(queueSizes) > 0 ? setTimeout(logLimiters, 5000) : undefined;
 }
 
 export default function createLimiter(name, ms) {
@@ -18,7 +18,7 @@ export default function createLimiter(name, ms) {
     limiters.push({name, limiter});
 
     function schedule(priority, fn, ...args) {
-        if (!timeout) timeout = setTimeout(logLimiters, 20000);
+        if (!timeout) timeout = setTimeout(logLimiters, 5000);
         return limiter.schedulePriority(priority, fn, ...args);
     }
 
