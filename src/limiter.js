@@ -17,8 +17,13 @@ export default function createLimiter(name, ms) {
     var limiter = new Bottleneck(1, ms);
     limiters.push({name, limiter});
 
-    return (fn, ...args) => {
+    function schedule(priority, fn, ...args) {
         if (!timeout) timeout = setTimeout(logLimiters, 20000);
-        return limiter.schedule(fn, ...args);
+        return limiter.schedulePriority(priority, fn, ...args);
+    }
+
+    return {
+        'normal': schedule.bind(null, 1),
+        'high': schedule.bind(null, 0)
     };
 }

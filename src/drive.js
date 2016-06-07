@@ -19,7 +19,7 @@ const getSpreadsheet = denodeify(sheets.spreadsheets.get);
 
 async function fetchAllChanges(pageToken = undefined) {
     var options = Object.assign({auth, 'maxResults': 1000}, pageToken ? {pageToken} : {});
-    var page = await limiter(listChanges, options);
+    var page = await limiter.high(listChanges, options);
 
     var largestChangeId, items;
     if (page.nextPageToken) {
@@ -57,7 +57,7 @@ var request = (function() {
     }
 
     return function req(uri) {
-        return rlimiter(_req, uri);
+        return rlimiter.normal(_req, uri);
     };
 })();
 
@@ -67,14 +67,14 @@ export default {
     fetchAllChanges,
 
     fetchRecentChanges(startChangeId) {
-        return limiter(listChanges, {auth, startChangeId, 'maxResults': 25});
+        return limiter.high(listChanges, {auth, startChangeId, 'maxResults': 25});
     },
 
     fetchFilePermissions(fileId) {
-        return limiter(listPermissions, {auth, fileId});
+        return limiter.high(listPermissions, {auth, fileId});
     },
 
     fetchSpreadsheet(spreadsheetId) {
-        return limiter(getSpreadsheet, {auth, spreadsheetId});
+        return limiter.normal(getSpreadsheet, {auth, spreadsheetId});
     }
 }
