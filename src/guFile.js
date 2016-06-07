@@ -97,13 +97,15 @@ class DocsFile extends GuFile {
 // Some magic numbers that seem to make Google happy
 const delayInitial = 500;
 const delayExp = 1.6;
+const delayCutoff = 8; // After this many sheets, just wait delayMax
+const delayMax = 20000;
 
 class SheetsFile extends GuFile {
     async fetchFileJSON() {
         var spreadsheet = await drive.fetchSpreadsheet(this.id);
         var ms = 0;
         var delays = spreadsheet.sheets.map((sheet, n) => {
-            ms += n > 8 ? 20000 : delayInitial * Math.pow(delayExp, n);
+            ms += n > delayCutoff ? delayMax : delayInitial * Math.pow(delayExp, n);
             return delay(ms, () => this.fetchSheetJSON(sheet));
         });
         try {
