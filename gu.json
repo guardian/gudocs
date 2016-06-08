@@ -8,11 +8,11 @@
 
     "logdir": "var/log",
 
-    "secret": "supersecret",
     "aws_profile": "visuals",
     "s3bucket": "gdn-cdn",
-    "dbkey": "gudocs",
     "s3domain": "http://interactive.guim.co.uk",
+    "snsErrors": "arn:aws:sns:eu-west-1:868574345765:gudocs-error",
+    "dbkey": "gudocs",
     "requireDomainPermissions": "guardian.co.uk",
     "testFolder": "docsdata-test",
     "prodFolder": "docsdata"

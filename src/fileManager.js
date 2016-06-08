@@ -2,6 +2,7 @@ import gu from 'koa-gu'
 import { _ } from 'lodash'
 import { deserialize } from './guFile'
 import drive from './drive'
+import { notify } from './util'
 
 export default {
     async getStateDb() {
@@ -83,7 +84,8 @@ export default {
         var fails = (await Promise.all(promises)).filter(f => !!f);
         if (fails.length > 0) {
             gu.log.error('The following updates failed');
-            fails.forEach(fail => gu.log.error(`\t${fail.id} ${fail.title}`))
+            fails.forEach(fail => gu.log.error(`\t${fail.id} ${fail.title}`));
+            notify('Docs tool update errors', fails.map(fail => `${fail.id} ${fail.title}`).join('\n'));
         }
 
         await this.saveGuFiles(guFiles);
