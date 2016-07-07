@@ -10,11 +10,12 @@ import createLimiter from './limiter'
 var s3limiter = createLimiter('s3', 50);
 
 class GuFile {
-    constructor({metaData, lastUploadTest = null, lastUploadProd = null, domainPermissions = 'unknown'}) {
+    constructor({metaData, lastUploadTest = null, lastUploadProd = null, domainPermissions = 'unknown', properties = {}}) {
         this.metaData = metaData;
-        this.lastUploadTest = lastUploadTest
-        this.lastUploadProd = lastUploadProd
-        this.domainPermissions = domainPermissions
+        this.lastUploadTest = lastUploadTest;
+        this.lastUploadProd = lastUploadProd;
+        this.domainPermissions = domainPermissions;
+        this.properties = properties;
     }
 
     get id() { return this.metaData.id }
@@ -38,7 +39,8 @@ class GuFile {
             metaData: this.metaData,
             lastUploadTest: this.lastUploadTest,
             lastUploadProd: this.lastUploadProd,
-            domainPermissions: this.domainPermissions
+            domainPermissions: this.domainPermissions,
+            properties: this.properties
         });
     }
 
@@ -120,7 +122,11 @@ class SheetsFile extends GuFile {
     async fetchSheetJSON(sheet) {
         var baseURL = this.metaData.exportLinks['text/csv'];
         var csv = (await drive.request(`${baseURL}&gid=${sheet.properties.sheetId}`)).replace('http://', 'https://');
-        var json = Baby.parse(csv, {'header': sheet.properties.title !== 'tableDataSheet'}).data;
+
+        var isTable = sheet.properties.title === 'tableDataSheet';
+        this.properties.isTable = isTable;
+
+        var json = Baby.parse(csv, {'header': !isTable}).data;
         return {[sheet.properties.title]: json};
     }
 }
