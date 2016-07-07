@@ -89,7 +89,7 @@ class GuFile {
 
 class DocsFile extends GuFile {
     async fetchFileJSON() {
-      var rawBody = await drive.request(this.metaData.exportLinks['text/plain']);
+      var rawBody = (await drive.request(this.metaData.exportLinks['text/plain'])).replace('http://', 'https://');
       return archieml.load(rawBody);
     }
 }
@@ -119,7 +119,7 @@ class SheetsFile extends GuFile {
 
     async fetchSheetJSON(sheet) {
         var baseURL = this.metaData.exportLinks['text/csv'];
-        var csv = await drive.request(`${baseURL}&gid=${sheet.properties.sheetId}`);
+        var csv = (await drive.request(`${baseURL}&gid=${sheet.properties.sheetId}`)).replace('http://', 'https://');
         var json = Baby.parse(csv, {'header': sheet.properties.title !== 'tableDataSheet'}).data;
         return {[sheet.properties.title]: json};
     }
