@@ -112,6 +112,8 @@ class SheetsFile extends GuFile {
         });
         try {
             var sheetJSONs = await Promise.all(delays.map(d => d.promise));
+            this.properties.isTable = sheetJSONs.findIndex(sheetJSON => sheetJSON.tableDataSheet !== undefined) > -1;
+
             return {'sheets': Object.assign({}, ...sheetJSONs)};
         } catch (err) {
             delays.forEach(d => d.cancel());
@@ -122,11 +124,7 @@ class SheetsFile extends GuFile {
     async fetchSheetJSON(sheet) {
         var baseURL = this.metaData.exportLinks['text/csv'];
         var csv = (await drive.request(`${baseURL}&gid=${sheet.properties.sheetId}`)).replace('http://', 'https://');
-
-        var isTable = sheet.properties.title === 'tableDataSheet';
-        this.properties.isTable = isTable;
-
-        var json = Baby.parse(csv, {'header': !isTable}).data;
+        var json = Baby.parse(csv, {'header': sheet.properties.title !== 'tableDataSheet'}).data;
         return {[sheet.properties.title]: json};
     }
 }
