@@ -44,6 +44,11 @@ class GuFile {
         });
     }
 
+    cleanRaw(s) {
+        if (this.title.startsWith('[HTTP]')) return s;
+        else return s.replace(/http:\/\//g, 'https://');
+    }
+
     async fetchDomainPermissions() {
         if (gu.config.requireDomainPermissions) {
             var perms = await drive.fetchFilePermissions(this.id);
@@ -91,7 +96,7 @@ class GuFile {
 
 class DocsFile extends GuFile {
     async fetchFileJSON() {
-      var rawBody = (await drive.request(this.metaData.exportLinks['text/plain'])).replace(/http:\/\//g, 'https://');
+      var rawBody = this.cleanRaw(await drive.request(this.metaData.exportLinks['text/plain']));
       return archieml.load(rawBody);
     }
 }
@@ -123,7 +128,7 @@ class SheetsFile extends GuFile {
 
     async fetchSheetJSON(sheet) {
         var baseURL = this.metaData.exportLinks['text/csv'];
-        var csv = (await drive.request(`${baseURL}&gid=${sheet.properties.sheetId}`)).replace(/http:\/\//g, 'https://');
+        var csv = this.cleanRaw(await drive.request(`${baseURL}&gid=${sheet.properties.sheetId}`));
         var json = Baby.parse(csv, {'header': sheet.properties.title !== 'tableDataSheet'}).data;
         return {[sheet.properties.title]: json};
     }
