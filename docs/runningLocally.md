@@ -1,5 +1,4 @@
-# Instruction on running the app locally
-and performing basic mannual tests
+# Instruction on running the app locally and performing basic mannual tests
 
 ## Requirements:
 1. Google account with google drive
