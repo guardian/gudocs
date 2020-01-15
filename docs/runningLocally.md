@@ -1,4 +1,4 @@
-Instruction on running the app locally
+# Instruction on running the app locally
 and performing basic mannual tests
 
 ## Requirements:
