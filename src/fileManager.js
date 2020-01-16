@@ -5,6 +5,7 @@ import drive from './drive'
 import { notify } from './util'
 
 export default {
+    
     async getStateDb() {
         var stateDbString = await gu.db.get(gu.config.dbkey);
         return stateDbString ? JSON.parse(stateDbString) :
@@ -85,7 +86,8 @@ export default {
         if (fails.length > 0) {
             gu.log.error('The following updates failed');
             fails.forEach(fail => gu.log.error(`\t${fail.id} ${fail.title}`));
-            notify('Docs tool update errors', fails.map(fail => `${fail.id} ${fail.title}`).join('\n'));
+            var topicArn = gu.config.sns_errors
+            notify('Docs tool update errors', fails.map(fail => `${fail.id} ${fail.title}`).join('\n'), topicArn);
         }
 
         await this.saveGuFiles(guFiles);

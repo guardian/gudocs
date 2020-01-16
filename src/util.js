@@ -12,13 +12,9 @@ export function delay(ms, then) {
     };
 }
 
-var credentials = new AWS.SharedIniFileCredentials(config.aws_profile);
-AWS.config.region = 'eu-west-1';
-AWS.config.credentials = credentials;
-var sns = new AWS.SNS({'params': {'TopicArn': config.snsErrors}});
-var snsPublish = denodeify(sns.publish.bind(sns));
-
-export function notify(subject, message) {
+export function notify(subject, message, topicArn) {
+    var sns = new AWS.SNS({'params': {'TopicArn': topicArn}});
+    var snsPublish = denodeify(sns.publish.bind(sns));
     return snsPublish({'Subject': subject, 'Message': message}).catch(err => {
         gu.log.error('Failed to send notification', err);
     });

@@ -11,9 +11,9 @@
     "aws_profile": "visuals",
     "s3bucket": "gdn-cdn",
     "s3domain": "https://interactive.guim.co.uk",
-    "snsErrors": "arn:aws:sns:eu-west-1:868574345765:gudocs-error",
+    "sns_errors": "arn:aws:sns:eu-west-1:868574345765:gudocs-error",
     "dbkey": "gudocs",
-    "requireDomainPermissions": "guardian.co.uk",
+    "require_domain_permissions": "guardian.co.uk",
     "testFolder": "docsdata-test",
     "prodFolder": "docsdata"
 }
