@@ -4,23 +4,22 @@
   "main": "index.js",
   "license": "MIT",
   "devDependencies": {
-    "@aws-cdk/aws-elasticache": "^1.20.0",
-    "@aws-cdk/aws-lambda": "^1.20.0",
-    "@aws-cdk/core": "^1.20.0",
+    "@aws-cdk/aws-apigateway": "^1.21.0",
+    "@aws-cdk/aws-cloudfront": "^1.21.0",
+    "@aws-cdk/aws-ec2": "^1.21.0",
+    "@aws-cdk/aws-elasticache": "^1.21.0",
+    "@aws-cdk/aws-events": "^1.21.0",
+    "@aws-cdk/aws-events-targets": "^1.21.0",
+    "@aws-cdk/aws-lambda": "^1.21.0",
+    "@aws-cdk/aws-s3": "^1.21.0",
+    "@aws-cdk/core": "^1.21.0",
     "@types/node": "^13.1.7",
-    "cdk": "^1.20.0",
+    "cdk": "^1.21.0",
     "ts-node": "^8.6.2",
     "typescript": "^3.7.4"
   },
   "scripts": {
     "stack": "ts-node stack.ts",
     "synth": "cdk synth"
-  },
-  "dependencies": {
-    "@aws-cdk/aws-apigateway": "^1.20.0",
-    "@aws-cdk/aws-cloudfront": "^1.20.0",
-    "@aws-cdk/aws-events": "^1.20.0",
-    "@aws-cdk/aws-events-targets": "^1.20.0",
-    "@aws-cdk/aws-s3": "^1.20.0"
   }
 }

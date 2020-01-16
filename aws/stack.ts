@@ -1,9 +1,12 @@
+#!/usr/bin/env node
+
 import { Stack, Construct, App, StackProps, CfnOutput, CfnParameter, Duration } from '@aws-cdk/core';
 import { CfnCacheCluster } from '@aws-cdk/aws-elasticache'
 import { Function, Code, Runtime } from '@aws-cdk/aws-lambda';
 import { Bucket } from '@aws-cdk/aws-s3'
 import { LambdaRestApi } from '@aws-cdk/aws-apigateway'
 import { CloudFrontWebDistribution } from '@aws-cdk/aws-cloudfront'
+import { Vpc, Peer, SecurityGroup, Port } from '@aws-cdk/aws-ec2'
 import events = require('@aws-cdk/aws-events');
 import targets = require('@aws-cdk/aws-events-targets');
 
@@ -20,12 +23,11 @@ class GuDocs extends Stack {
     const redis = new CfnCacheCluster(this, 'redis', {
       cacheNodeType: 'cache.t2.micro',
       numCacheNodes: 1,
-      engine: 'redis'
+      engine: 'redis',
     })
-
     const lambdaParams = {
       code: Code.fromBucket(Bucket.fromBucketName(this, 'codebucket', 'something'), "??"),
-      runtime: Runtime.NODEJS_10_X
+      runtime: Runtime.NODEJS_10_X,
     }
     const batch = new Function(this, 'batch', {
       ...lambdaParams,
@@ -38,7 +40,7 @@ class GuDocs extends Stack {
 
     batchTrigger.addTarget(new targets.LambdaFunction(batch))
 
-    const web = new Function(this, 'batch', {
+    const web = new Function(this, 'web', {
       ...lambdaParams,
       handler: "web",
     })
