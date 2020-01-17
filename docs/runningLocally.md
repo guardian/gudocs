@@ -5,13 +5,9 @@
 2. "Service account" key for google API project
 3. Janus creds for composer account so that you will have access to s3 bucket `gudocs-dev`
 
-## connecting to Google account and google app project
+# Google Service account for development is setup allready 
 
-- you can connect app to any google account for testing purpose 
-- the app is using google drive changes API https://developers.google.com/drive/api/v2/manage-changes to track the changes in the files
-- getting access to google drive API
-you will need to get the "Service account" key
-look at instructions in [googleApis.md](/docs/googleApis.md) file to see instructions on how to do that
+for `docs-tool-dev@guardian-visuals.iam.gserviceaccount.com`
 
 ## how to track google documents by the app
 
@@ -35,3 +31,12 @@ then you should see details about the files that you shared with the app email `
 edit something in the file in google docs/sheets shared with `<key-name>@<project-name>.iam.gserviceaccount.com` 
 run `./dev-start-fetch.sh` again 
 and you should see the updates in the ui
+
+## connecting to Google account and google app project
+
+- you can connect app to any google account for testing purpose 
+- the app is using google drive changes API https://developers.google.com/drive/api/v2/manage-changes to track the changes in the files
+- getting access to google drive API
+you will need to get the "Service account" key
+look at instructions in [googleApis.md](/docs/googleApis.md) file to see instructions on how to do that
+
