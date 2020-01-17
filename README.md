@@ -8,8 +8,7 @@ Setup
 -----
 
 1. Install `redis`
-1. `npm install`
-1. [Download service account `key.json`](docs/googleApis.md) from Google developer console into root directory
+2. `npm install`
 
 Running server
 --------------
