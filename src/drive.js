@@ -2,28 +2,31 @@ import gu from 'koa-gu'
 import denodeify from 'denodeify'
 import google from 'googleapis'
 import rp from 'request-promise'
-import key from '../key.json'
 import createLimiter from './limiter'
+import sak from './service-account-key'
 
 var drive = google.drive('v2');
 var sheets = google.sheets('v4');
 
-var auth = new google.auth.JWT(key.client_email, null, key.private_key, ['https://www.googleapis.com/auth/drive']);
-
-var limiter = createLimiter('drive', 100);
-
-const authorize = denodeify(auth.authorize.bind(auth));
 const listPermissions = denodeify(drive.permissions.list);
 const listChanges = denodeify(drive.changes.list);
 const getSpreadsheet = denodeify(sheets.spreadsheets.get);
 
-async function fetchAllChanges(pageToken = undefined) {
+var limiter = createLimiter('drive', 100);
+
+async function getGoogleAuth() {
+    const key = await sak.getServiceAccountKey();
+    const auth = new google.auth.JWT(key.client_email, null, key.private_key, ['https://www.googleapis.com/auth/drive']);
+    return auth;
+}
+
+async function fetchAllChanges(auth, pageToken = undefined) {
     var options = Object.assign({auth, 'maxResults': 1000}, pageToken ? {pageToken} : {});
     var page = await limiter.high(listChanges, options);
 
     var largestChangeId, items;
     if (page.nextPageToken) {
-        let nextPage = await fetchAllChanges(page.nextPageToken);
+        let nextPage = await fetchAllChanges(auth, page.nextPageToken);
         largestChangeId = Math.max(page.largestChangeId, nextPage.largestChangeId);
         items = page.items.concat(nextPage.items);
     } else {
@@ -39,8 +42,9 @@ var request = (function() {
     var token;
     var rlimiter = createLimiter('request', 400);
 
-    async function _req(uri) {
+    async function _req(auth, uri) {
         gu.log.info('Requesting', uri);
+        const authorize = denodeify(auth.authorize.bind(auth));
         if (!token) token = await authorize();
 
         try {
@@ -56,8 +60,8 @@ var request = (function() {
         }
     }
 
-    return function req(uri) {
-        return rlimiter.normal(_req, uri);
+    return function req(auth, uri) {
+        return rlimiter.normal(_req, auth, uri);
     };
 })();
 
@@ -66,15 +70,17 @@ export default {
 
     fetchAllChanges,
 
-    fetchRecentChanges(startChangeId) {
+    getGoogleAuth,
+
+    fetchRecentChanges(auth, startChangeId) {
         return limiter.high(listChanges, {auth, startChangeId, 'maxResults': 25});
     },
 
-    fetchFilePermissions(fileId) {
+    fetchFilePermissions(auth, fileId) {
         return limiter.high(listPermissions, {auth, fileId});
     },
 
-    fetchSpreadsheet(spreadsheetId) {
+    fetchSpreadsheet(auth, spreadsheetId) {
         return limiter.normal(getSpreadsheet, {auth, spreadsheetId});
     }
 }

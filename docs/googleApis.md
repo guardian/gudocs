@@ -8,6 +8,12 @@ Setting up Google APIs
 5. Under "Service account" select "New service account". Give it a name (maybe use your own name). For "Key type" select "JSON". Click "Create"
 6. A JSON file will be downloaded to your computer. Save this in the root directory of this project with the filename `key.json`
 
+Accessing google Service account key
+======================
+we are using now Aws Systems Manager parameter store to ster the google Service account key
+
+More details in [service-account-key.js](/src/service-account-key.js)
+
 Enable Google Drive API
 =======================
 

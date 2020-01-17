@@ -7,7 +7,7 @@ import koaBody from 'koa-body'
 import koaSession from 'koa-session'
 import path from 'path'
 
-var env = process.env.NODE_ENV || 'development'
+var env = process.env.NODE_ENV || 'dev'
 
 module.exports = www;
 

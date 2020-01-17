@@ -8,8 +8,7 @@ Setup
 -----
 
 1. Install `redis`
-1. `npm install`
-1. [Download service account `key.json`](docs/googleApis.md) from Google developer console into root directory
+2. `npm install`
 
 Running server
 --------------
@@ -21,3 +20,10 @@ Fetching/updating docs
 ----------------------
 
 `npm run fetch` will fetch and update all docs/sheets shared with the service account email address.
+
+
+Google Service accounts emails:
+
+- prod `docs-tool@guardian-visuals.iam.gserviceaccount.com`
+- code `docs-tool-code@guardian-visuals.iam.gserviceaccount.com`
+- dev `docs-tool-dev@guardian-visuals.iam.gserviceaccount.com`
