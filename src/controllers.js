@@ -4,11 +4,16 @@ import moment from 'moment'
 import gu from 'koa-gu'
 import fs from 'fs'
 import path from 'path'
+import serviceAccountKeyProvider from './service-account-key'
 
 import fileManager from './fileManager'
 
-var key = require('../key.json')
 var cssPath = path.resolve(__dirname, '../build/main.css');
+
+async function getClientEmail() {
+    const key = await serviceAccountKeyProvider.getServiceAccountKey()
+    return key.client_email
+}
 
 exports.index = function *(){
     var page = parseInt(this.request.query.page) || 0;
@@ -19,7 +24,7 @@ exports.index = function *(){
         page, size, dev,
         docs2archieml: yield fileManager.getStateDb(),
         files: yield fileManager.getAllGuFiles(page * size, (page + 1) * size - 1),
-        email: key.client_email,
+        email: yield getClientEmail(),
         css: fs.readFileSync(cssPath, 'utf8')
     });
 };

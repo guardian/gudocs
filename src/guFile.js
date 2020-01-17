@@ -3,9 +3,10 @@ import archieml from 'archieml'
 import { _ } from 'lodash'
 import Baby from 'babyparse'
 import drive from './drive'
-import key from '../key.json'
 import { delay } from './util'
 import createLimiter from './limiter'
+import serviceAccountKeyProvider from './service-account-key'
+
 
 var s3limiter = createLimiter('s3', 50);
 
@@ -50,13 +51,15 @@ class GuFile {
     }
 
     async fetchDomainPermissions() {
+        const auth = await drive.getGoogleAuth();
+        const clientEmialFromAuth = auth.email;
         var configuredRequireDomainPermissions = gu.config.require_domain_permissions;
         if (configuredRequireDomainPermissions) {
-            var perms = await drive.fetchFilePermissions(this.id);
+            var perms = await drive.fetchFilePermissions(auth, this.id);
             var domainPermission = perms.items.find(i => i.name === configuredRequireDomainPermissions)
             if (domainPermission) {
                 return domainPermission.role;
-            } else if(perms.items.find(i => i.emailAddress === key.client_email)) {
+            } else if(perms.items.find(i => i.emailAddress === clientEmialFromAuth)) {
                 return 'none';
             } else {
                 return 'unknown';
@@ -68,7 +71,6 @@ class GuFile {
 
     async update(publish) {
         gu.log.info(`Updating ${this.id} ${this.title} (${this.metaData.mimeType})`);
-
         var body = await this.fetchFileJSON();
         this.domainPermissions = await this.fetchDomainPermissions();
 
@@ -97,7 +99,8 @@ class GuFile {
 
 class DocsFile extends GuFile {
     async fetchFileJSON() {
-      var rawBody = this.cleanRaw(await drive.request(this.metaData.exportLinks['text/plain']));
+      const auth = await drive.getGoogleAuth();
+      var rawBody = this.cleanRaw(await drive.request(auth, this.metaData.exportLinks['text/plain']));
       return archieml.load(rawBody);
     }
 }
@@ -110,7 +113,8 @@ const delayMax = 20000;
 
 class SheetsFile extends GuFile {
     async fetchFileJSON() {
-        var spreadsheet = await drive.fetchSpreadsheet(this.id);
+        const auth = await drive.getGoogleAuth();
+        var spreadsheet = await drive.fetchSpreadsheet(auth, this.id);
         var ms = 0;
         var delays = spreadsheet.sheets.map((sheet, n) => {
             ms += n > delayCutoff ? delayMax : delayInitial * Math.pow(delayExp, n);
@@ -129,7 +133,8 @@ class SheetsFile extends GuFile {
 
     async fetchSheetJSON(sheet) {
         var baseURL = this.metaData.exportLinks['text/csv'];
-        var csv = this.cleanRaw(await drive.request(`${baseURL}&gid=${sheet.properties.sheetId}`));
+        const auth = await drive.getGoogleAuth();
+        var csv = this.cleanRaw(await drive.request(auth, `${baseURL}&gid=${sheet.properties.sheetId}`));
         var json = Baby.parse(csv, {'header': sheet.properties.title !== 'tableDataSheet'}).data;
         return {[sheet.properties.title]: json};
     }

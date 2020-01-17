@@ -43,14 +43,15 @@ export default {
     },
 
     async update({fetchAll = false, fileIds = [], prod = false}) {
+        const auth = await drive.getGoogleAuth();
         var guFiles;
         if (fileIds.length > 0) {
             guFiles = await this.getGuFiles(fileIds);
         } else {
             let db = await this.getStateDb();
             let changeList = fetchAll ?
-                await drive.fetchAllChanges() :
-                await drive.fetchRecentChanges(1 + Number(db.lastChangeId));
+                await drive.fetchAllChanges(auth) :
+                await drive.fetchRecentChanges(auth, 1 + Number(db.lastChangeId));
 
             gu.log.info(`${changeList.items.length} changes. Largest ChangeId: ${changeList.largestChangeId}`);
 

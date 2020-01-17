@@ -4,6 +4,9 @@ var
 npm-debug.log
 node_modules
 key.json
+key.encrypted
 *.tmp
 *.iml
 .idea*
+*.DS_Store
+keys
