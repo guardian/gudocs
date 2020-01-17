@@ -1,14 +1,21 @@
 import AWS from 'aws-sdk'
 import gu from 'koa-gu'
-gu.init({ www: false });
+import createLimiter from './limiter'
 
-// TODO shared file creds is relevant only on local machine
-const credentials = new AWS.SharedIniFileCredentials({ profile: gu.config.aws_profile });
-AWS.config.credentials = credentials;
+gu.init({ www: false });
+const sharedFileCreds = new AWS.SharedIniFileCredentials({ profile: gu.config.aws_profile });
 AWS.config.region = 'eu-west-1';
 
 export function getSSMClient() {
+    // TODO shared file creds is relevant only on local machine
+    AWS.config.credentials = sharedFileCreds;
     return new AWS.SSM();
+}
+
+export function getS3Limiter() {
+    // TODO shared file creds is relevant only on local machine
+    AWS.config.credentials = sharedFileCreds;
+    return createLimiter('s3', 50);
 }
 
 

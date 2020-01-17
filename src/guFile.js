@@ -4,11 +4,9 @@ import { _ } from 'lodash'
 import Baby from 'babyparse'
 import drive from './drive'
 import { delay } from './util'
-import createLimiter from './limiter'
-import serviceAccountKeyProvider from './service-account-key'
+import { getS3Limiter } from './aws-utils'
 
-
-var s3limiter = createLimiter('s3', 50);
+const s3limiter = getS3Limiter();
 
 class GuFile {
     constructor({metaData, lastUploadTest = null, lastUploadProd = null, domainPermissions = 'unknown', properties = {}}) {
