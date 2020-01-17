@@ -74,7 +74,7 @@ export default {
         }
 
         var promises = guFiles.map(guFile => {
-            return guFile.update(prod)
+            return guFile.update(auth, prod)
                 .then(() => undefined)
                 .catch(err => {
                     gu.log.error('Failed to update', guFile.id, guFile.title)
