@@ -8,7 +8,7 @@
 
     "logdir": "var/log",
 
-    "aws_profile": "visuals",
+    "aws_profile": "interactives",
     "s3bucket": "gdn-cdn",
     "s3domain": "https://interactive.guim.co.uk",
     "sns_errors": "arn:aws:sns:eu-west-1:868574345765:gudocs-error",
