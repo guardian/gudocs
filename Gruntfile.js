@@ -1,4 +1,6 @@
 
+const sass = require('node-sass');
+
 module.exports = function(grunt) {
 
     require('jit-grunt')(grunt);
@@ -28,9 +30,10 @@ module.exports = function(grunt) {
 
         sass: {
             options: {
+                implementation: sass,
                 sourceMap: true
             },
-            interactive: {
+            dist: {
                 files: {
                     'build/main.css': 'src/css/main.scss'
                 }
