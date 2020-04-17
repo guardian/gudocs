@@ -11,7 +11,7 @@ Setup
 2. Make sure you are running the correct version of node. Install NVM if you don't have it it: `brew install nvm` and then
 run `nvm use` in the root of the project.
 3. Install the node packages: `npm install`
-3. [Download service account `key.json`](docs/googleApis.md) from Google developer console into root directory
+4. [Download service account `key.json`](docs/googleApis.md) from Google developer console into root directory
 
 Running server
 --------------
