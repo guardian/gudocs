@@ -13,8 +13,14 @@ run `nvm use` in the root of the project.
 3. Install the node packages: `npm install`
 4. [Download service account `key.json`](docs/googleApis.md) from Google developer console into root directory
 
-Running server
+Running Locally
 --------------
+
+To run the UI: `./dev-start-ui.sh` (this starts the redis server + builds the webapp on auto-reload)
+
+To fetch the latest Google docs: `./dev-start-fetch.sh`
+
+OR:
 
 - Development (auto-reload) - `npm run dev`
 - Production - `npm run www`

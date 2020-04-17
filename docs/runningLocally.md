@@ -24,9 +24,7 @@ after that the app should track all the changes/editis in any file you share
 
 ## preforming simple manual test
 
-you will need redis running locally. 
-
-run `./dev-start-ui.sh` and you will see the UI at http://localhost:4001/ that lists the files (it should be blank once you run it for the first time with a fresh google account)
+run `./dev-start-ui.sh` and you will see the UI at http://localhost:4001/ that lists the files (it should be blank once you run it for the first time with a fresh google account). This script also starts and runs redis in the background. 
 
 run `./dev-start-fetch.sh` that will hit google drive changes api and update locally running REDIS with information about google docs file changes
 
