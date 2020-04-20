@@ -39,7 +39,7 @@ sudo supervisorctl restart docs
 sudo supervisorctl restart docsfetch
 ```
 
-To see what each start/restart command does look at the `docs` and `docfetch` entries in the `supervisor.conf` file in the root of the server. 
+To see what each start/restart command does look at the `docs` and `docsfetch` entries in the `supervisor.conf` file in the root of the server. 
 
 More details on deploying to the [Visuals Server here](https://docs.google.com/document/d/1VUX-F-pAX1V-QXBtx8_U0ECEMtjdhcgmiBAgOXtmGHM/edit?ts=5e9d94b3#heading=h.d93zsvyk19tx)
 
