@@ -7,4 +7,3 @@ key.json
 *.tmp
 *.iml
 .idea*
-dump.rdb

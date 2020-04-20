@@ -1,11 +1,12 @@
 Setting up Google APIs
 ======================
 
-1. Visit [https://console.developers.google.com/](https://console.cloud.google.com/iam-admin/serviceaccounts?orgonly=true&project=guardian-visuals&supportedpurview=organizationId)
-2. Click on one of the service accounts. For development purposes, this is likely to be: `docs-tool-dev` or `docs-tool-code`. 
-3. In the interface for that service account click "Edit", and then "Create Key".
-4. Choose key type JSON and then click "Create".
-5. A JSON file will be downloaded to your computer. Save this in the root directory of this project with the filename `key.json`
+1. Visit [https://console.developers.google.com/](https://console.developers.google.com/)
+2. Select a project > Create a project...
+3. Create a project called `gudocs`
+4. Go got Credentials > Create credentials > Service account key
+5. Under "Service account" select "New service account". Give it a name (maybe use your own name). For "Key type" select "JSON". Click "Create"
+6. A JSON file will be downloaded to your computer. Save this in the root directory of this project with the filename `key.json`
 
 Enable Google Drive API
 =======================
