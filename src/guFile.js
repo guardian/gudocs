@@ -1,7 +1,7 @@
 import gu from 'koa-gu'
 import archieml from 'archieml'
 import { _ } from 'lodash'
-import Papa from 'papaparse'
+import Baby from 'babyparse'
 import drive from './drive'
 import key from '../key.json'
 import { delay } from './util'
@@ -130,7 +130,7 @@ class SheetsFile extends GuFile {
     async fetchSheetJSON(sheet) {
         var baseURL = this.metaData.exportLinks['text/csv'];
         var csv = this.cleanRaw(await drive.request(`${baseURL}&gid=${sheet.properties.sheetId}`));
-        var json = Papa.parse(csv, {'header': sheet.properties.title !== 'tableDataSheet'}).data;
+        var json = Baby.parse(csv, {'header': sheet.properties.title !== 'tableDataSheet'}).data;
         return {[sheet.properties.title]: json};
     }
 }

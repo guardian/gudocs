@@ -2,7 +2,7 @@
 
 ## Requirements:
 1. Google account with google drive
-2. "Service account" key from Google, saved as as `key.json` file in the root of the project. 
+2. "Service account" key for google API project
 3. Janus creds for composer account so that you will have access to s3 bucket `gudocs-dev`
 
 ## connecting to Google account and google app project
@@ -24,7 +24,9 @@ after that the app should track all the changes/editis in any file you share
 
 ## preforming simple manual test
 
-run `./dev-start-ui.sh` and you will see the UI at http://localhost:4001/ that lists the files (it should be blank once you run it for the first time with a fresh google account). This script also starts and runs redis in the background. 
+you will need redis running locally 
+
+run `./dev-start-ui.sh` and you will see the UI at http://localhost:4001/ that lists the files (it should be blank once you run it for the first time with a fresh google account)
 
 run `./dev-start-fetch.sh` that will hit google drive changes api and update locally running REDIS with information about google docs file changes
 
