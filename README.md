@@ -25,6 +25,12 @@ OR:
 - Development (auto-reload) - `npm run dev`
 - Production - `npm run www`
 
+To Deploy
+--------------
+
+Ssh into the Visuals server. Cd into the gudocs repo and git pull master. If necessary, run the build script. `./build.sh`.
+
+
 Fetching/updating docs
 ----------------------
 
