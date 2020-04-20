@@ -28,7 +28,20 @@ OR:
 To Deploy
 --------------
 
-Ssh into the Visuals server. Cd into the gudocs repo and git pull master. 
+*This deployment process is difficult to use and should be upgraded to RiffRaff asap*
+
+Ssh into the Visuals server (you need to have your github keys added to access it). Cd into the gudocs repo and git pull master. You may need to run commands like `npm install` if you have eg. installed any different dependencies.
+
+This server uses `supervisor` to build apps on the box. To restart the apps, run the following:
+
+```
+sudo supervisorctl restart docs
+sudo supervisorctl restart docsfetch
+```
+
+To see what each start/restart command does look at the `docs` and `docfetch` entries in the `supervisor.conf` file in the root of the server. 
+
+More details on deploying to the [Visuals Server here](https://docs.google.com/document/d/1VUX-F-pAX1V-QXBtx8_U0ECEMtjdhcgmiBAgOXtmGHM/edit?ts=5e9d94b3#heading=h.d93zsvyk19tx)
 
 
 Fetching/updating docs
