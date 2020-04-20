@@ -28,7 +28,7 @@ OR:
 To Deploy
 --------------
 
-Ssh into the Visuals server. Cd into the gudocs repo and git pull master. If necessary, run the build script. `./build.sh`.
+Ssh into the Visuals server. Cd into the gudocs repo and git pull master. 
 
 
 Fetching/updating docs
