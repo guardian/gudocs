@@ -47,7 +47,7 @@
 					<td>
 						<a class="docs" href="{{ f.urlDocs }}">docs</a> /
 						{% if f.properties.isTable %}
-							<a class="table-embed" target="_blank" href="https://interactive.guim.co.uk/tools/tables/embed/index.html?spreadsheet={{ f.id }}">table url</a> /
+							<a class="table-embed" target="_blank" href="https://interactive.guim.co.uk/atoms/2020/08/table-tool/embed/app/main.html?spreadsheet={{ f.id }}">table url</a> /
 						{% endif %}
 						<a class="{%if f.isTestCurrent() %}current{%else%}old{%endif%}"
 							href="{{ f.urlTest }}">test</a>
