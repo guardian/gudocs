@@ -14,7 +14,7 @@
   "license": "ISC",
   "dependencies": {
     "archieml": "^0.3.1",
-    "aws-sdk": "^2.3.18",
+    "aws-sdk": "^2.783.0",
     "babel-cli": "^6.9.0",
     "babel-plugin-syntax-async-functions": "^6.8.0",
     "babel-plugin-transform-regenerator": "^6.9.0",
