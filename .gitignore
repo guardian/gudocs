@@ -8,3 +8,4 @@ key.json
 *.iml
 .idea*
 dump.rdb
+!.github
