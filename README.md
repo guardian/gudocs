@@ -30,7 +30,7 @@ To Deploy
 
 *This deployment process is difficult to use and should be upgraded to RiffRaff asap*
 
-Ssh into the Visuals server (you need to have your github keys added to access it. Someone who already has access can add you - see doc linked below). Cd into the gudocs repo and git pull master. You may need to run commands like `npm install` if you have eg. installed any different dependencies.
+Ssh into the Visuals server (you need to have your github keys added to access it. Someone who already has access can add you - see doc linked below). Cd into the gudocs repo and git pull main. You may need to run commands like `npm install` if you have eg. installed any different dependencies.
 
 This server uses `supervisor` to build apps on the box. To restart the apps, run the following:
 
