@@ -1,4 +1,4 @@
-import gu from 'koa-gu'
+import gu from '@guardian/koa-gu'
 import co from 'co'
 import fileManager from './fileManager'
 import program from 'commander'
@@ -6,9 +6,7 @@ import AWS from 'aws-sdk'
 
 // setup aws credentials
 gu.init({www:false});
-var credentials = new AWS.SharedIniFileCredentials(gu.config.aws_profile);
 AWS.config.region = 'eu-west-1';
-AWS.config.credentials = credentials;
 
 program
   .option('-a, --all', 'fetch all changes', false)

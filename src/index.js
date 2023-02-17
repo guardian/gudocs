@@ -1,4 +1,4 @@
-import gu from 'koa-gu'
+import gu from '@guardian/koa-gu'
 import responseTime from 'koa-response-time'
 import compress from 'koa-compress'
 import logger from 'koa-logger'

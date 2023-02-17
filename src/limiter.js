@@ -1,4 +1,4 @@
-import gu from 'koa-gu'
+import gu from '@guardian/koa-gu'
 import Bottleneck from 'bottleneck'
 import { _ } from 'lodash'
 
