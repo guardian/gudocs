@@ -36,7 +36,7 @@
     "koa-router": "^5.1.2",
     "koa-session": "^3.3.1",
     "lodash": "^3.9.3",
-    "moment": "^2.10.3",
+    "moment": "^2.29.4",
     "redis": "^0.12.1",
     "request-promise": "^0.4.2",
     "swig": "^1.4.2"
