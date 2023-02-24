@@ -1,17 +1,16 @@
 
+const sass = require('node-sass');
+
 module.exports = function(grunt) {
-    grunt.loadNpmTasks('grunt-concurrent')
-    grunt.loadNpmTasks('grunt-contrib-clean')
-    grunt.loadNpmTasks('grunt-contrib-watch')
-    grunt.loadNpmTasks('grunt-dart-sass')
-    grunt.loadNpmTasks('grunt-nodemon')
+
+    require('jit-grunt')(grunt);
 
     grunt.initConfig({
 
         watch: {
             css: {
                 files: ['src/css/**/*'],
-                tasks: ['dart-sass'],
+                tasks: ['sass'],
             }
         },
 
@@ -29,7 +28,11 @@ module.exports = function(grunt) {
             }
         },
 
-        'dart-sass': {
+        sass: {
+            options: {
+                implementation: sass,
+                sourceMap: true
+            },
             dist: {
                 files: {
                     'build/main.css': 'src/css/main.scss'
@@ -45,6 +48,6 @@ module.exports = function(grunt) {
         }
     });
 
-    grunt.registerTask('build', ['clean', 'dart-sass'])
+    grunt.registerTask('build', ['clean', 'sass'])
     grunt.registerTask('default', ['build', 'concurrent:www']);
 }
