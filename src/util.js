@@ -1,7 +1,7 @@
 import AWS from 'aws-sdk'
 import denodeify from 'denodeify'
 import config from '../gu.json' // hack because koa-gu doesn't load config until init
-import gu from 'koa-gu'
+import gu from '@guardian/koa-gu'
 
 export function delay(ms, then) {
     var interval;

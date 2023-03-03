@@ -1,4 +1,4 @@
-import gu from 'koa-gu'
+import gu from '@guardian/koa-gu'
 import archieml from 'archieml'
 import { _ } from 'lodash'
 import Papa from 'papaparse'

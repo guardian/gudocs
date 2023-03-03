@@ -1,4 +1,4 @@
-import gu from 'koa-gu'
+import gu from '@guardian/koa-gu'
 import denodeify from 'denodeify'
 import google from 'googleapis'
 import rp from 'request-promise'
