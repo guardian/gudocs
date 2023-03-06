@@ -1,6 +1,5 @@
 import gu from 'koa-gu'
 import archieml from 'archieml'
-import { _ } from 'lodash'
 import Papa from 'papaparse'
 import drive from './drive'
 import key from '../key.json'
