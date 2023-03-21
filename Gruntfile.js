@@ -1,6 +1,3 @@
-
-const sass = require('node-sass');
-
 module.exports = function(grunt) {
 
     require('jit-grunt')(grunt);
@@ -28,9 +25,8 @@ module.exports = function(grunt) {
             }
         },
 
-        sass: {
+        'dart-sass': {
             options: {
-                implementation: sass,
                 sourceMap: true
             },
             dist: {
@@ -48,6 +44,6 @@ module.exports = function(grunt) {
         }
     });
 
-    grunt.registerTask('build', ['clean', 'sass'])
+    grunt.registerTask('build', ['clean', 'dart-sass'])
     grunt.registerTask('default', ['build', 'concurrent:www']);
 }
