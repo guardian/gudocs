@@ -1,4 +1,4 @@
-import gu from 'koa-gu'
+import gu from '@guardian/koa-gu'
 import co from 'co'
 import fileManager from './fileManager'
 import program from 'commander'
