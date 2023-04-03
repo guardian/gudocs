@@ -71,6 +71,7 @@ class GuFile {
         var body = await this.fetchFileJSON();
         this.domainPermissions = await this.fetchDomainPermissions();
 
+        gu.log.info(`Uploading ${this.id} ${this.title} (${this.metaData.mimeType}) to S3`);
         var p = this.uploadToS3(body, false);
         if (publish) return p.then(() => this.uploadToS3(body, true));
         return p;
@@ -86,10 +87,15 @@ class GuFile {
             ContentType: 'application/json',
             CacheControl: prod ? 'max-age=30' : 'max-age=5'
         }
+        gu.log.info(`Creating S3 promise ${JSON.stringify(params)}`);
         var promise = s3limiter.normal(gu.s3.putObject, params);
+        gu.log.info(`S3 promise created ${JSON.stringify(params)}`);
         promise.then(_ =>
             this[prod ? 'lastUploadProd' : 'lastUploadTest'] = this.metaData.modifiedDate);
-        promise.then(_ => gu.log.info(`Uploaded ${this.title} to ${uploadPath}`))
+        promise.then(_ => gu.log.info(`Uploaded ${this.title} to ${uploadPath}`));
+        promise.catch(err => {
+          gu.log.error(`Call to S3 failed ${JSON.stringify(err)} ${JSON.stringify(params)}`);
+        })
         return promise;
     }
 }
