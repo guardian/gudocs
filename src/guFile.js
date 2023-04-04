@@ -88,6 +88,7 @@ class GuFile {
             CacheControl: prod ? 'max-age=30' : 'max-age=5'
         }
         gu.log.info(`Creating S3 promise ${JSON.stringify(params)}`);
+        gu.log.info(`Object ref: ${gu.s3.putObject}`)
         var promise = s3limiter.normal(gu.s3.putObject, params);
         gu.log.info(`S3 promise created ${JSON.stringify(params)}`);
         promise.then(_ =>
