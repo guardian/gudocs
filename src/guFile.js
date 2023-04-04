@@ -87,10 +87,9 @@ class GuFile {
             ContentType: 'application/json',
             CacheControl: prod ? 'max-age=30' : 'max-age=5'
         }
-        gu.log.info(`Creating S3 promise ${JSON.stringify(params)}`);
-        gu.log.info(`Object ref: ${gu.s3.putObject}`)
+
         var promise = s3limiter.normal(gu.s3.putObject, params);
-        gu.log.info(`S3 promise created ${JSON.stringify(params)}`);
+
         promise.then(_ =>
             this[prod ? 'lastUploadProd' : 'lastUploadTest'] = this.metaData.modifiedDate);
         promise.then(_ => gu.log.info(`Uploaded ${this.title} to ${uploadPath}`));
