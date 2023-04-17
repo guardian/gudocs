@@ -1,4 +1,4 @@
-import gu from 'koa-gu'
+import gu from '@guardian/koa-gu'
 import responseTime from 'koa-response-time'
 import compress from 'koa-compress'
 import logger from 'koa-logger'
@@ -11,8 +11,9 @@ var env = process.env.NODE_ENV || 'development'
 
 module.exports = www;
 
-function www(opts) {
-    gu.init();
+async function www(opts) {
+    await gu.init();
+
     var app = koa();
 
     app.keys = [gu.config.secret];
