@@ -1,11 +1,9 @@
 import gu from '@guardian/koa-gu'
 import co from 'co'
 import fileManager from './fileManager'
-import program from 'commander'
 import AWS from 'aws-sdk'
 
-
-
+const { program } = require('commander');
 
 AWS.config.region = 'eu-west-1';
 
@@ -19,7 +17,7 @@ const run = async () => {
     .parse(process.argv);
 
   function *fetch() {
-      yield fileManager.update({fetchAll: !!program.all, fileIds: program.id});
+    yield fileManager.update({fetchAll: !!program.opts().all, fileIds: program.opts().id});
   }
 
   co(fetch)

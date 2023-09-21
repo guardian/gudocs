@@ -1,7 +1,8 @@
 import gu from '@guardian/koa-gu'
-import { _ } from 'lodash'
 import { deserialize } from './guFile'
 import drive from './drive'
+
+const  _ = require('lodash');
 
 export default {
 
@@ -51,9 +52,11 @@ export default {
                 await drive.fetchAllChanges() :
                 await drive.fetchRecentChanges(1 + Number(db.lastChangeId));
 
-            gu.log.info(`${changeList.items.length} changes. Largest ChangeId: ${changeList.largestChangeId}`);
+            console.log({changeList});
 
-            db.lastChangeId = changeList.largestChangeId;
+            gu.log.info(`${changeList.data.changes.length} changes. Largest ChangeId: ${changeList.data.newStartPageToken}`);
+
+            db.lastChangeId = changeList.data.newStartPageToken;
             await this.saveStateDb(db);
 
             let filesMetadata = changeList.items.map(change => change.file).filter(f => f);
