@@ -1,37 +1,26 @@
 import gu from '@guardian/koa-gu'
-import denodeify from 'denodeify'
-import google from 'googleapis'
+import fs from 'fs'
 import rp from 'request-promise'
-import key from '../key.json'
 import createLimiter from './limiter'
 
-var drive = google.drive('v2');
-var sheets = google.sheets('v4');
+const { google } = require('googleapis');
 
-var auth = new google.auth.JWT(key.client_email, null, key.private_key, ['https://www.googleapis.com/auth/drive']);
+const keysFile = fs.readFileSync('key.json', 'utf8')
+const keys = JSON.parse(keysFile);
 
-var limiter = createLimiter('drive', 100);
+const authClient = google.auth.fromJSON(keys);
+authClient.scopes = ['https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/spreadsheets'];
 
-const authorize = denodeify(auth.authorize.bind(auth));
-const listPermissions = denodeify(drive.permissions.list);
-const listChanges = denodeify(drive.changes.list);
-const getSpreadsheet = denodeify(sheets.spreadsheets.get);
+google.options({
+    auth: authClient,
+    timeout: 5000,
+})
 
-async function fetchAllChanges(pageToken = undefined) {
-    var options = Object.assign({auth, 'maxResults': 1000}, pageToken ? {pageToken} : {});
-    var page = await limiter.high(listChanges, options);
+const driveService = google.drive('v2');
+const sheetsService = google.sheets('v4');
 
-    var largestChangeId, items;
-    if (page.nextPageToken) {
-        let nextPage = await fetchAllChanges(page.nextPageToken);
-        largestChangeId = Math.max(page.largestChangeId, nextPage.largestChangeId);
-        items = page.items.concat(nextPage.items);
-    } else {
-        largestChangeId = page.largestChangeId;
-        items = page.items;
-    }
-
-    return {items, largestChangeId};
+async function fetchAllChanges(pageToken = 1) {
+    return await driveService.changes.list({pageToken: 1, maxResults: 1000});
 }
 
 // TODO: deprecate in favour of googleapis
@@ -41,7 +30,7 @@ var request = (function() {
 
     async function _req(uri) {
         gu.log.info('Requesting', uri);
-        if (!token) token = await authorize();
+        if (!token) token = await authClient.getAccessToken();
 
         try {
             return await rp({uri, 'headers': {'Authorization': `${token.token_type} ${token.access_token}`}});
@@ -66,15 +55,15 @@ export default {
 
     fetchAllChanges,
 
-    fetchRecentChanges(startChangeId) {
-        return limiter.high(listChanges, {auth, startChangeId, 'maxResults': 25});
+    async fetchRecentChanges(startChangeId) {
+        return await driveService.changes.list( {pageToken: startChangeId, maxResults: 25});
     },
 
-    fetchFilePermissions(fileId) {
-        return limiter.high(listPermissions, {auth, fileId});
+    async fetchFilePermissions(fileId) {
+        return await driveService.permissions.list({fileId});
     },
 
-    fetchSpreadsheet(spreadsheetId) {
-        return limiter.normal(getSpreadsheet, {auth, spreadsheetId});
+    async fetchSpreadsheet(spreadsheetId) {
+        return await sheetsService.spreadsheets.get({spreadsheetId});
     }
 }

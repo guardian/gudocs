@@ -6,7 +6,7 @@ import key from '../key.json'
 import { delay } from './util'
 import createLimiter from './limiter'
 
-var s3limiter = createLimiter('s3', 50);
+const s3limiter = createLimiter('s3', 50);
 
 class GuFile {
     constructor({metaData, lastUploadTest = null, lastUploadProd = null, domainPermissions = 'unknown', properties = {}}) {
@@ -49,13 +49,13 @@ class GuFile {
     }
 
     async fetchDomainPermissions() {
-        var configuredRequireDomainPermissions = gu.config.require_domain_permissions;
+        const configuredRequireDomainPermissions = gu.config.require_domain_permissions;
         if (configuredRequireDomainPermissions) {
-            var perms = await drive.fetchFilePermissions(this.id);
-            var domainPermission = perms.items.find(i => i.name === configuredRequireDomainPermissions)
+            const perms = await drive.fetchFilePermissions(this.id);
+            const domainPermission = perms.data.items.find(i => i.name === configuredRequireDomainPermissions);
             if (domainPermission) {
                 return domainPermission.role;
-            } else if(perms.items.find(i => i.emailAddress === key.client_email)) {
+            } else if(perms.data.items.find(i => i.emailAddress === key.client_email)) {
                 return 'none';
             } else {
                 return 'unknown';
@@ -68,18 +68,18 @@ class GuFile {
     async update(publish) {
         gu.log.info(`Updating ${this.id} ${this.title} (${this.metaData.mimeType})`);
 
-        var body = await this.fetchFileJSON();
+        const body = await this.fetchFileJSON();
         this.domainPermissions = await this.fetchDomainPermissions();
 
         gu.log.info(`Uploading ${this.id} ${this.title} (${this.metaData.mimeType}) to S3`);
-        var p = this.uploadToS3(body, false);
+        const p = this.uploadToS3(body, false);
         if (publish) return p.then(() => this.uploadToS3(body, true));
         return p;
     }
 
     uploadToS3(body, prod) {
-        var uploadPath = prod ? this.pathProd : this.pathTest;
-        var params = {
+        const uploadPath = prod ? this.pathProd : this.pathTest;
+        const params = {
             Bucket: gu.config.s3bucket,
             Key: uploadPath,
             Body: JSON.stringify(body),
@@ -88,7 +88,7 @@ class GuFile {
             CacheControl: prod ? 'max-age=30' : 'max-age=5'
         }
 
-        var promise = s3limiter.normal(gu.s3.putObject, params);
+        const promise = s3limiter.normal(gu.s3.putObject, params);
 
         promise.then(_ =>
             this[prod ? 'lastUploadProd' : 'lastUploadTest'] = this.metaData.modifiedDate);
@@ -102,7 +102,7 @@ class GuFile {
 
 class DocsFile extends GuFile {
     async fetchFileJSON() {
-      var rawBody = this.cleanRaw(await drive.request(this.metaData.exportLinks['text/plain']));
+      const rawBody = this.cleanRaw(await drive.request(this.metaData.exportLinks['text/plain']));
       return archieml.load(rawBody);
     }
 }
@@ -115,14 +115,14 @@ const delayMax = 20000;
 
 class SheetsFile extends GuFile {
     async fetchFileJSON() {
-        var spreadsheet = await drive.fetchSpreadsheet(this.id);
-        var ms = 0;
-        var delays = spreadsheet.sheets.map((sheet, n) => {
+        const spreadsheet = await drive.fetchSpreadsheet(this.id);
+        let ms = 0;
+        const delays = spreadsheet.data.sheets.map((sheet, n) => {
             ms += n > delayCutoff ? delayMax : delayInitial * Math.pow(delayExp, n);
             return delay(ms, () => this.fetchSheetJSON(sheet));
         });
         try {
-            var sheetJSONs = await Promise.all(delays.map(d => d.promise));
+            const sheetJSONs = await Promise.all(delays.map(d => d.promise));
             this.properties.isTable = sheetJSONs.findIndex(sheetJSON => sheetJSON.tableDataSheet !== undefined) > -1;
 
             return {'sheets': Object.assign({}, ...sheetJSONs)};
@@ -133,9 +133,9 @@ class SheetsFile extends GuFile {
     }
 
     async fetchSheetJSON(sheet) {
-        var baseURL = this.metaData.exportLinks['text/csv'];
-        var csv = this.cleanRaw(await drive.request(`${baseURL}&gid=${sheet.properties.sheetId}`));
-        var json = Papa.parse(csv, {'header': sheet.properties.title !== 'tableDataSheet'}).data;
+        const baseURL = this.metaData.exportLinks['text/csv'];
+        const csv = this.cleanRaw(await drive.request(`${baseURL}&gid=${sheet.properties.sheetId}`));
+        const json = Papa.parse(csv, {'header': sheet.properties.title !== 'tableDataSheet'}).data;
         return {[sheet.properties.title]: json};
     }
 }
@@ -146,7 +146,7 @@ const types = {
 };
 
 export function deserialize(json) {
-    var FileClass = types[json.metaData.mimeType];
+    const FileClass = types[json.metaData.mimeType];
     if (!FileClass) gu.log.warn(`mimeType ${json.metaData.mimeType} not recognized`);
     else return new FileClass(json);
 }
