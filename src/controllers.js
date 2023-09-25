@@ -1,7 +1,6 @@
 import gu from '@guardian/koa-gu'
 import fs from 'fs'
 import path from 'path'
-
 import fileManager from './fileManager'
 
 const key = require('../key.json');
