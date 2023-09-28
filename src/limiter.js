@@ -1,9 +1,8 @@
 import gu from '@guardian/koa-gu'
 import Bottleneck from 'bottleneck'
+import  _ from 'lodash';
 
-const  _ = require('lodash');
 const limiters = [];
-
 var timeout;
 
 function logLimiters() {

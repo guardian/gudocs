@@ -1,8 +1,7 @@
 import gu from '@guardian/koa-gu'
 import { deserialize } from './guFile'
 import drive from './drive'
-
-const  _ = require('lodash');
+import  _ from 'lodash';
 
 export default {
 
