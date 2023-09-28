@@ -1,6 +1,6 @@
 import gu from '@guardian/koa-gu'
 import Bottleneck from 'bottleneck'
-import  _ from 'lodash';
+import { _ } from 'lodash'
 
 const limiters = [];
 var timeout;
