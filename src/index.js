@@ -5,29 +5,35 @@ import logger from 'koa-logger'
 import koa from 'koa'
 import koaBody from 'koa-body'
 import koaSession from 'koa-session'
+import path from 'path'
 
-const env = process.env.NODE_ENV || 'development'
+var env = process.env.NODE_ENV || 'development'
 
 module.exports = www;
 
-async function www() {
+async function www(opts) {
     await gu.init();
 
-    const app = new koa();
+    var app = koa();
 
     app.keys = [gu.config.secret];
 
     // logging
-    if ('test' !== env) app.use(logger());
+    if ('test' != env) app.use(logger());
 
     // errors
-    app.use(async (ctx, next) => {
+    app.use(function* (next) {
+        this.err = function(msg) {};
+        yield next;
+    });
+
+    app.use(function* (next) {
         try {
-            await next();
+            yield next;
         } catch (e) {
-            ctx.status = e.statusCode || e.status || 500;
-            ctx.body = "internal error";
-            ctx.app.emit('error', e, this);
+            this.status = e.status || 500;
+            this.body = "internal error";
+            this.app.emit('error', e, this);
         }
     });
 
@@ -38,10 +44,10 @@ async function www() {
 
 
     if (gu.config.base_url[gu.config.base_url.length -1] !== '/') {
-        app.use(async (ctx, next) => {
-            if (ctx.path === '/' || ctx.path === gu.config.base_url) {
-                ctx.redirect(gu.config.base_url + '/')
-            } else await next();
+        app.use(function*(next) {
+            if (this.path === '/' || this.path === gu.config.base_url) {
+                this.redirect(gu.config.base_url + '/')
+            } else yield* next;
         })
     }
 

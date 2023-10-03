@@ -2,24 +2,24 @@ import gu from '@guardian/koa-gu'
 import Bottleneck from 'bottleneck'
 import { _ } from 'lodash'
 
-const limiters = [];
+var limiters = [];
 var timeout;
 
 function logLimiters() {
-    const statuses = limiters.map(({name, limiter}) => `${name}: ${limiter.queued()} queued`);
+    var statuses = limiters.map(({name, limiter}) => `${name}: ${limiter.nbQueued()} queued`);
     gu.log.info('Limiters - ' + statuses.join(', '));
 
-    const queueSizes = limiters.map(l => l.limiter.queued());
+    var queueSizes = limiters.map(l => l.limiter.nbQueued());
     timeout = _.sum(queueSizes) > 0 ? setTimeout(logLimiters, 5000) : undefined;
 }
 
 export default function createLimiter(name, ms) {
-    const limiter = new Bottleneck({maxConcurrent: 1, minTime: ms});
+    var limiter = new Bottleneck(1, ms);
     limiters.push({name, limiter});
 
     function schedule(priority, fn, ...args) {
         if (!timeout) timeout = setTimeout(logLimiters, 5000);
-        return limiter.schedule({priority}, fn, ...args);
+        return limiter.schedulePriority(priority, fn, ...args);
     }
 
     return {
