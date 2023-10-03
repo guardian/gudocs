@@ -30,13 +30,7 @@ To Deploy
 
 *This deployment process is difficult to use and should be upgraded to RiffRaff asap*
 
-- `ssm` into the Visuals server (you can now use ssm with [Janus credentials](https://janus.gutools.co.uk/multi-credentials?&permissionIds=interactives-dev&tzOffset=1); the instance lives in the Interactives AWS account).
-
-```
-ssm ssh -x -t visuals,PROD --profile interactives
-```
-
-- `cd` into the gudocs repo and git pull main. You may need to run commands like `npm install` if you have eg. installed any different dependencies.
+Ssh into the Visuals server (you need to have your github keys added to access it. Someone who already has access can add you - see doc linked below). Cd into the gudocs repo and git pull main. You may need to run commands like `npm install` if you have eg. installed any different dependencies.
 
 This server uses `supervisor` to build apps on the box. To restart the apps, run the following:
 
@@ -45,13 +39,10 @@ sudo supervisorctl restart docs
 sudo supervisorctl restart docsfetch
 ```
 
-To see what each start/restart command does look at the `docs` and `docsfetch` entries in the `supervisor.conf` file in the root of the server.
-
-To check error logs for a process run `supervisorctl tail -5000 procname stderr` replacing the process name as appropriate. 
-
-Note: if testing anything from a branch, make sure to `git checkout main` when you're done.
+To see what each start/restart command does look at the `docs` and `docsfetch` entries in the `supervisor.conf` file in the root of the server. 
 
 More details on deploying to the [Visuals Server here](https://docs.google.com/document/d/1VUX-F-pAX1V-QXBtx8_U0ECEMtjdhcgmiBAgOXtmGHM/edit?ts=5e9d94b3#heading=h.d93zsvyk19tx)
+
 
 Fetching/updating docs
 ----------------------
