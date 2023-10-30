@@ -7,7 +7,7 @@ Google Docs to S3 uploader
 Setup
 -----
 
-1. Install `redis` globally - `brew install redis` 
+1. Endure Docker is running
 2. Make sure you are running the correct version of node. Install NVM if you don't have it it: `brew install nvm` and then
 run `nvm use` in the root of the project.
 3. Install the node packages: `npm install`
