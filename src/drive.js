@@ -49,7 +49,7 @@ var request = (function() {
             if (err.statusCode === 401 && maxRetries > 0) {
                 gu.log.info('Authorization token expired');
                 token = undefined;
-                await req(uri, maxRetries - 1);
+                return await req(uri, maxRetries - 1);
             }
 
             throw err;
