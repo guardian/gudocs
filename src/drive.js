@@ -39,26 +39,28 @@ var request = (function() {
     var token;
     var rlimiter = createLimiter('request', 400);
 
-    async function _req(uri) {
+    async function _req(uri, maxRetries) {
         gu.log.info('Requesting', uri);
         if (!token) token = await authorize();
 
         try {
             return await rp({uri, 'headers': {'Authorization': `${token.token_type} ${token.access_token}`}});
         } catch (err) {
-            if (err.statusCode === 401) {
+            if (err.statusCode === 401 && maxRetries > 0) {
                 gu.log.info('Authorization token expired');
                 token = undefined;
-                return await req(uri);
+                return await req(uri, maxRetries - 1);
             }
 
             throw err;
         }
     }
 
-    return function req(uri) {
-        return rlimiter.normal(_req, uri);
+    function req(uri, maxRetries = 2) {
+        return rlimiter.normal(_req, uri, maxRetries);
     };
+
+    return req
 })();
 
 export default {
