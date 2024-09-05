@@ -2,6 +2,7 @@ import gu from '@guardian/koa-gu'
 import { _ } from 'lodash'
 import { deserialize } from './guFile'
 import drive from './drive'
+import rp from 'request-promise'
 
 export default {
 
@@ -30,10 +31,34 @@ export default {
         return ids.length ? await this.getGuFiles(ids) : [];
     },
 
+    async saveToGudocsDynamodb(file) {
+        const domain = gu.config.s3bucket === "gdn-cdn" ?
+            "gudocs.gutools.co.uk" :
+            "gudocs.code.dev-gutools.co.uk"
+
+        return rp(
+            `https://${domain}/legacy?api-key=${gu.config.legacy_key}`,
+            {
+                method: 'POST',
+                body: file,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        ).catch((err) => {
+            console.log(JSON.stringify(err))
+        })
+    },
+
     async saveGuFiles(files) {
         if (files.length === 0) return;
 
         var saveArgs = _.flatten( files.map(file => [`${gu.config.dbkey}:${file.id}`, file.serialize()]) )
+
+        await Promise.all(files.map((file) => {
+            this.saveToGudocsDynamodb(file.serialize())
+        }));
+
         await gu.db.mset.call(gu.db, saveArgs);
 
         var indexArgs = _.flatten( files.map(file => [file.unixdate, file.id]) )
