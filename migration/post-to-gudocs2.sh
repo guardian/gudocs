@@ -16,10 +16,13 @@ else
   exit 1
 fi
 
+count=1
 while read -r line
 do 
   curl -X POST \
     "https://gudocs.local.dev-gutools.co.uk/legacy?api-key=$API_KEY" \
     -H 'Content-Type: application/json' \
-    -d "$line"
+    -d "$line" --fail || echo -n "Failed to submit line $count"
+  echo
+  count=$((count+1))
 done
